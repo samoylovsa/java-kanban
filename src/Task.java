@@ -2,21 +2,16 @@ import java.util.Objects;
 
 public class Task {
 
-    private int id;
-    private String name;
-    private String description;
-    private Status status;
+    protected int id;
+    protected String name;
+    protected String description;
+    protected Status status;
 
 
     Task(String name, String description, Status status) {
         this.name = name;
         this.description = description;
         this.status = status;
-    }
-
-    Task(String name, String description) {
-        this.name = name;
-        this.description = description;
     }
 
     public int getId() {

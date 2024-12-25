@@ -4,9 +4,8 @@ public class Epic extends Task {
 
     private ArrayList<Integer> subTaskIdList;
 
-
     Epic(String name, String description) {
-        super(name, description);
+        super(name, description, Status.NEW);
         subTaskIdList = new ArrayList<>();
     }
 
@@ -14,8 +13,16 @@ public class Epic extends Task {
         return subTaskIdList;
     }
 
-    public void setSubTaskIdList(ArrayList<Integer> subTaskIdList) {
-        this.subTaskIdList = subTaskIdList;
+    public void deleteSubTaskId(Integer id) {
+        subTaskIdList.remove(id);
+    }
+
+    public void deleteAllSubTaskId() {
+        subTaskIdList.clear();
+    }
+
+    public void addSubTaskId(int id) {
+        subTaskIdList.add(id);
     }
 
     @Override
