@@ -72,21 +72,26 @@ public class TaskManager {
         }
     }
 
-    public final boolean updateSubTask(SubTask subTask) {
-        int subTaskId = subTask.getId();
-        SubTask existingSubTask = subTasks.get(subTaskId);
+    public final boolean updateSubTask(SubTask newSubTask) {
+        int newSubTaskId = newSubTask.getId();
+        SubTask existingSubTask = subTasks.get(newSubTaskId);
         if (existingSubTask == null) {
-            System.out.println("Не найдена подзадача с id: " + subTaskId);
+            System.out.println("Не найдена подзадача с id: " + newSubTaskId);
             return false;
         }
-        int epicId = subTask.getEpicId();
-        Epic epic = epics.get(epicId);
-        if (epic == null) {
-            System.out.println("Не найден эпик с таким epicId: " + epicId);
+        int newSubTaskEpicId = newSubTask.getEpicId();
+        Epic existingEpic = epics.get(newSubTaskEpicId);
+        if (existingEpic == null) {
+            System.out.println("Не найден эпик с таким epicId: " + newSubTaskEpicId);
             return false;
         }
-        subTasks.put(subTaskId, subTask);
-        updateEpicStatus(epic);
+        int existingSubTaskEpicId = existingSubTask.getEpicId();
+        if (newSubTaskEpicId != existingSubTaskEpicId) {
+            System.out.println("epicId новой подзадачи не равен epicId существующей подзадачи");
+            return false;
+        }
+        subTasks.put(newSubTaskId, newSubTask);
+        updateEpicStatus(existingEpic);
 
         return true;
     }
