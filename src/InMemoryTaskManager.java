@@ -1,19 +1,20 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
+
+    private static final int HISTORY_SIZE = 10;
 
     private int idCounter = 0;
     private final HashMap<Integer, Task> tasks;
     private final HashMap<Integer, Epic> epics;
     private final HashMap<Integer, SubTask> subTasks;
+    private final LinkedList<Task> taskHistory;
 
     InMemoryTaskManager() {
         tasks = new HashMap<>();
         epics = new HashMap<>();
         subTasks = new HashMap<>();
+        taskHistory = new LinkedList<>();
     }
 
     @Override
@@ -104,17 +105,31 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public final Task getTask(int id) {
-        return tasks.get(id);
+        Task task = tasks.get(id);
+        if (task != null) {
+            addToHistory(task);
+        }
+
+        return task;
     }
 
     @Override
     public final Epic getEpic(int id) {
-        return epics.get(id);
+        Epic epic = epics.get(id);
+        if (epic != null) {
+            addToHistory(epic);
+        }
+
+        return epic;
     }
 
     @Override
     public final SubTask getSubTask(int id) {
-        return subTasks.get(id);
+        SubTask subTask = subTasks.get(id);
+        if (subTask != null) {
+            addToHistory(subTask);
+        }
+        return subTask;
     }
 
     @Override
@@ -231,6 +246,18 @@ public class InMemoryTaskManager implements TaskManager {
         for (Task subTask : subTasks.values()) {
             System.out.println(subTask);
         }
+    }
+
+    @Override
+    public final ArrayList<Task> getHistory() {
+        return new ArrayList<>(taskHistory);
+    }
+
+    private void addToHistory(Task task) {
+        if (taskHistory.size() >= HISTORY_SIZE) {
+            taskHistory.removeFirst();
+        }
+        taskHistory.addLast(task);
     }
 
     private void updateEpicStatus(Epic epic) {
