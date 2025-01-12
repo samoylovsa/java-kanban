@@ -49,7 +49,7 @@ class InMemoryHistoryManagerTest {
         historyManager.add(epic);
         historyManager.add(subTask);
 
-        ArrayList<Task> actualTaskHistory = historyManager.getHistory();
+        ArrayList<Task> actualTaskHistory = new ArrayList<>(historyManager.getHistory());
         ArrayList<Task> expectedTaskHistory = new ArrayList<>(Arrays.asList(task, epic, subTask));
 
         assertEquals(expectedTaskHistory, actualTaskHistory);

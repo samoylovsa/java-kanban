@@ -4,10 +4,8 @@ import tasks.Epic;
 import tasks.Status;
 import tasks.SubTask;
 import tasks.Task;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+
+import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
 
@@ -140,17 +138,17 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public final ArrayList<Task> getTasks() {
+    public final List<Task> getTasks() {
         return new ArrayList<>(tasks.values());
     }
 
     @Override
-    public final ArrayList<Epic> getEpics() {
+    public final List<Epic> getEpics() {
         return new ArrayList<>(epics.values());
     }
 
     @Override
-    public final ArrayList<SubTask> getSubTasks() {
+    public final List<SubTask> getSubTasks() {
         return new ArrayList<>(subTasks.values());
     }
 
@@ -227,7 +225,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public final ArrayList<SubTask> getSubTasksByEpic(int id) {
+    public final List<SubTask> getSubTasksByEpic(int id) {
         Epic epic = epics.get(id);
         if (epic == null) {
             System.out.println("Не существует эпика с id: " + id);
@@ -253,6 +251,11 @@ public class InMemoryTaskManager implements TaskManager {
         for (Task subTask : subTasks.values()) {
             System.out.println(subTask);
         }
+    }
+
+    @Override
+    public final List<Task> getHistory() {
+        return historyManager.getHistory();
     }
 
     private void updateEpicStatus(Epic epic) {

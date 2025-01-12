@@ -10,6 +10,7 @@ import tasks.Task;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -310,7 +311,7 @@ class InMemoryTaskManagerTest {
             taskManager.createTask(task);
         }
 
-        ArrayList<Task> actualTasks = taskManager.getTasks();
+        ArrayList<Task> actualTasks = new ArrayList<>(taskManager.getTasks());
 
         assertEquals(expectedTasks, actualTasks);
     }
@@ -325,7 +326,7 @@ class InMemoryTaskManagerTest {
             taskManager.createEpic(epic);
         }
 
-        ArrayList<Epic> actualEpics = taskManager.getEpics();
+        ArrayList<Epic> actualEpics = new ArrayList<>(taskManager.getEpics());
 
         assertEquals(expectedEpics, actualEpics);
     }
@@ -341,7 +342,7 @@ class InMemoryTaskManagerTest {
             taskManager.createSubTask(subTask);
         }
 
-        ArrayList<SubTask> actualSubTasks = taskManager.getSubTasks();
+        ArrayList<SubTask> actualSubTasks = new ArrayList<>(taskManager.getSubTasks());
 
         assertEquals(expectedSubTasks, actualSubTasks);
     }
@@ -361,7 +362,7 @@ class InMemoryTaskManagerTest {
             taskManager.createTask(originalTasks.get(key));
         }
 
-        ArrayList<Task> tasksBeforeDeletion = taskManager.getTasks();
+        ArrayList<Task> tasksBeforeDeletion = new ArrayList<>(taskManager.getTasks());
         int actualSizeBeforeDeletion = tasksBeforeDeletion.size();
         int expectedSizeBeforeDeletion = 3;
 
@@ -369,7 +370,7 @@ class InMemoryTaskManagerTest {
 
         taskManager.deleteTask(taskIdForDeletion);
 
-        ArrayList<Task> actualTasksAfterDeletion = taskManager.getTasks();
+        ArrayList<Task> actualTasksAfterDeletion = new ArrayList<>(taskManager.getTasks());
         originalTasks.remove(taskIdForDeletion);
         ArrayList<Task> expectedTasksAfterDeletion = new ArrayList<>(originalTasks.values());
         Task deletedTask = taskManager.getTask(taskIdForDeletion);
@@ -399,8 +400,8 @@ class InMemoryTaskManagerTest {
 
         taskManager.deleteEpic(idOfFirstEpic);
 
-        ArrayList<Epic> epicsAfterDeletion = taskManager.getEpics();
-        ArrayList<SubTask> subTasksAfterDeletion = taskManager.getSubTasks();
+        ArrayList<Epic> epicsAfterDeletion = new ArrayList<>(taskManager.getEpics());
+        ArrayList<SubTask> subTasksAfterDeletion = new ArrayList<>(taskManager.getSubTasks());
         Epic expectedEpic = originalEpics.get(1);
         int actualEpicsSize = epicsAfterDeletion.size();
         int expectedEpicsSize = 1;
@@ -422,7 +423,7 @@ class InMemoryTaskManagerTest {
 
         taskManager.deleteSubTask(2);
 
-        ArrayList<SubTask> subTasksAfterDeletion = taskManager.getSubTasks();
+        ArrayList<SubTask> subTasksAfterDeletion = new ArrayList<>(taskManager.getSubTasks());
         originalSubTasks.remove(0);
         ArrayList<SubTask> expectedSubTasksAfterDeletion = originalSubTasks;
         int actualSubTasksSize = subTasksAfterDeletion.size();
@@ -443,7 +444,7 @@ class InMemoryTaskManagerTest {
         }
 
         taskManager.deleteAllTasks();
-        ArrayList<Task> actualTasks = taskManager.getTasks();
+        ArrayList<Task> actualTasks = new ArrayList<>(taskManager.getTasks());
 
         assertTrue(actualTasks.isEmpty());
     }
@@ -465,8 +466,8 @@ class InMemoryTaskManagerTest {
         }
 
         taskManager.deleteAllEpics();
-        ArrayList<Epic> actualEpics = taskManager.getEpics();
-        ArrayList<SubTask> actualSubTasks = taskManager.getSubTasks();
+        ArrayList<Epic> actualEpics = new ArrayList<>(taskManager.getEpics());
+        ArrayList<SubTask> actualSubTasks = new ArrayList<>(taskManager.getSubTasks());
 
         assertTrue(actualEpics.isEmpty());
         assertTrue(actualSubTasks.isEmpty());
@@ -489,7 +490,7 @@ class InMemoryTaskManagerTest {
         }
 
         taskManager.deleteAllSubTasks();
-        ArrayList<SubTask> actualSubTasks = taskManager.getSubTasks();
+        ArrayList<SubTask> actualSubTasks = new ArrayList<>(taskManager.getSubTasks());
 
         assertTrue(actualSubTasks.isEmpty());
     }
@@ -535,7 +536,7 @@ class InMemoryTaskManagerTest {
     void shouldBeNullIfEpicIdNotExist() {
         int nonExistEpicId = 54321;
 
-        ArrayList<SubTask> actualSubTasksByEpicId = taskManager.getSubTasksByEpic(nonExistEpicId);
+        List<SubTask> actualSubTasksByEpicId = taskManager.getSubTasksByEpic(nonExistEpicId);
 
         assertNull(actualSubTasksByEpicId);
     }
@@ -550,9 +551,25 @@ class InMemoryTaskManagerTest {
             taskManager.createSubTask(subTask);
         }
 
-        ArrayList<SubTask> actualSubTasksByEpicId = taskManager.getSubTasksByEpic(epicId);
-        ArrayList<SubTask> expectedSubTasks = taskManager.getSubTasks();
+        ArrayList<SubTask> actualSubTasksByEpicId = new ArrayList<>(taskManager.getSubTasksByEpic(epicId));
+        ArrayList<SubTask> expectedSubTasks = new ArrayList<>(taskManager.getSubTasks());
 
         assertEquals(expectedSubTasks, actualSubTasksByEpicId);
+    }
+
+    @Test
+    void shouldReturnHistoryAfterTasksGetting() {
+        int taskId = taskManager.createTask(new Task("TaskName", "TaskDescription", Status.NEW));
+        int epicId = taskManager.createEpic(new Epic("EpicName", "EpicDescription"));
+        int subTaskId = taskManager.createSubTask(new SubTask("SubTaskName", "SubTaskDescription", Status.NEW, epicId));
+
+        Task task = taskManager.getTask(taskId);
+        Epic epic = taskManager.getEpic(epicId);
+        SubTask subTask = taskManager.getSubTask(subTaskId);
+
+        ArrayList<Task> actualHistory = new ArrayList<>(taskManager.getHistory());
+        ArrayList<Task> expectedHistory = new ArrayList<>(Arrays.asList(task, epic, subTask));
+
+        assertEquals(expectedHistory, actualHistory);
     }
 }

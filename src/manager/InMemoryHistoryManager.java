@@ -4,6 +4,7 @@ import tasks.Task;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
@@ -19,7 +20,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     @Override
-    public final ArrayList<Task> getHistory() {
+    public final List<Task> getHistory() {
         return new ArrayList<>(taskHistory);
     }
 }
