@@ -572,4 +572,51 @@ class InMemoryTaskManagerTest {
 
         assertEquals(expectedHistory, actualHistory);
     }
+
+    @Test
+    void shouldDeleteTaskFromTasksAndHistory() {
+        Task task = new Task("TaskName", "TaskDescription", Status.NEW);
+        task.setId(1);
+        taskManager.createTask(task);
+        Task taskFromManager = taskManager.getTask(task.getId());
+
+        assertTrue(taskManager.getTasks().contains(taskFromManager));
+        assertTrue(taskManager.getHistory().contains(taskFromManager));
+
+        taskManager.deleteTask(task.getId());
+
+        assertFalse(taskManager.getTasks().contains(taskFromManager));
+        assertFalse(taskManager.getHistory().contains(taskFromManager));
+    }
+
+    @Test
+    void shouldDeleteEpicFromEpicsAndHistory() {
+        Epic epic = new Epic("Name", "Description");
+        int epicId = taskManager.createEpic(epic);
+        Epic epicFromManager = taskManager.getEpic(epic.getId());
+
+        assertTrue(taskManager.getEpics().contains(epicFromManager));
+        assertTrue(taskManager.getHistory().contains(epicFromManager));
+
+        taskManager.deleteEpic(epicId);
+
+        assertFalse(taskManager.getEpics().contains(epicFromManager));
+        assertFalse(taskManager.getHistory().contains(epicFromManager));
+    }
+
+    @Test
+    void shouldDeleteSubTaskFromSubTasksAndHistory() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId);
+        int subTaskId = taskManager.createSubTask(subTask);
+        SubTask subTaskFromManager = taskManager.getSubTask(subTaskId);
+
+        assertTrue(taskManager.getSubTasks().contains(subTaskFromManager));
+        assertTrue(taskManager.getHistory().contains(subTaskFromManager));
+
+        taskManager.deleteSubTask(subTaskId);
+
+        assertFalse(taskManager.getSubTasks().contains(subTaskFromManager));
+        assertFalse(taskManager.getHistory().contains(subTaskFromManager));
+    }
 }

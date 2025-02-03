@@ -38,8 +38,6 @@ public interface TaskManager {
 
     void deleteSubTask(int id);
 
-    void deleteAllEntities();
-
     void deleteAllTasks();
 
     void deleteAllEpics();

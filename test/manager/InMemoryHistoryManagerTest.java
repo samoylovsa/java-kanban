@@ -10,8 +10,7 @@ import tasks.Task;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryHistoryManagerTest {
 
@@ -90,5 +89,38 @@ class InMemoryHistoryManagerTest {
         Task expectedDeletedElement = epic;
 
         assertNotEquals(expectedDeletedElement, actualFirstElement);
+    }
+
+    @Test
+    void shouldBeEmptyAfterRemovingAllKindOfTasks() {
+        Task task = new Task("TaskName", "TaskDescription", Status.NEW);
+        task.setId(1);
+        Epic epic = new Epic("EpicName", "EpicDescription");
+        epic.setId(2);
+        SubTask subTask = new SubTask("SubTaskName", "SubTaskDescription", Status.NEW, 2);
+        subTask.setId(3);
+
+        historyManager.add(task);
+        historyManager.add(epic);
+        historyManager.add(subTask);
+
+        historyManager.remove(2);
+        ArrayList<Task> taskHistoryAfterRemoving = new ArrayList<>(historyManager.getHistory());
+
+        assertEquals(2, taskHistoryAfterRemoving.size());
+        assertTrue(taskHistoryAfterRemoving.contains(task));
+        assertFalse(taskHistoryAfterRemoving.contains(epic));
+        assertTrue(taskHistoryAfterRemoving.contains(subTask));
+
+        historyManager.remove(1);
+        taskHistoryAfterRemoving = new ArrayList<>(historyManager.getHistory());
+
+        assertFalse(taskHistoryAfterRemoving.contains(task));
+
+        historyManager.remove(3);
+        taskHistoryAfterRemoving = new ArrayList<>(historyManager.getHistory());
+
+        assertFalse(taskHistoryAfterRemoving.contains(subTask));
+        assertEquals(0, taskHistoryAfterRemoving.size());
     }
 }
