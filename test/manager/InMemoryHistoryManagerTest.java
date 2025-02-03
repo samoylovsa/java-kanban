@@ -22,20 +22,6 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    void taskHistoryShouldContainOnlyTenEntities() {
-        Task task = new Task("Name", "Description", Status.NEW);
-
-        for (int i = 0; i < 20; i++) {
-            historyManager.add(task);
-        }
-
-        int actualHistorySize = historyManager.getHistory().size();
-        int expectedHistorySize = 10;
-
-        assertEquals(expectedHistorySize, actualHistorySize);
-    }
-
-    @Test
     void taskHistoryCanContainTasksAndHisAncestors() {
         Task task = new Task("TaskName", "TaskDescription", Status.NEW);
         task.setId(1);
@@ -68,27 +54,6 @@ class InMemoryHistoryManagerTest {
         Task expectedLastElement = epic;
 
         assertEquals(expectedLastElement, actualLastElement);
-    }
-
-    @Test
-    void firstElementInHistoryShouldBeDeletedAfterOversizing() {
-        for (int i = 1; i <= 11; i++) {
-            Epic epic = new Epic("Name", "Description");
-            epic.setId(i);
-            historyManager.add(epic);
-        }
-
-        Task actualFirstElement = historyManager.getHistory().getFirst();
-        Epic epic = new Epic("Name", "Description");
-        epic.setId(2);
-        Task expectedFirstElement = epic;
-
-        assertEquals(expectedFirstElement, actualFirstElement);
-
-        epic.setId(1);
-        Task expectedDeletedElement = epic;
-
-        assertNotEquals(expectedDeletedElement, actualFirstElement);
     }
 
     @Test
