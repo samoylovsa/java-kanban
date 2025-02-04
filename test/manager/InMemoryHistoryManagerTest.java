@@ -9,6 +9,7 @@ import tasks.Task;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -87,5 +88,21 @@ class InMemoryHistoryManagerTest {
 
         assertFalse(taskHistoryAfterRemoving.contains(subTask));
         assertEquals(0, taskHistoryAfterRemoving.size());
+    }
+
+    @Test
+    public void duplicateTaskShouldBeDeleted() {
+        Task task1 = new Task("TaskName", "TaskDescription", Status.NEW);
+        task1.setId(1);
+        Task task2 = new Task("TaskName", "TaskDescription", Status.NEW);
+        task2.setId(1);
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        List<Task> actualHistory = historyManager.getHistory();
+
+        assertEquals(1, actualHistory.size());
+        assertEquals(task2, actualHistory.get(0));
     }
 }
