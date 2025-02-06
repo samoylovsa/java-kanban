@@ -9,9 +9,9 @@ import tasks.Task;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryHistoryManagerTest {
 
@@ -20,20 +20,6 @@ class InMemoryHistoryManagerTest {
     @BeforeEach
     void beforeEach() {
         historyManager = Manager.getDefaultHistory();
-    }
-
-    @Test
-    void taskHistoryShouldContainOnlyTenEntities() {
-        Task task = new Task("Name", "Description", Status.NEW);
-
-        for (int i = 0; i < 20; i++) {
-            historyManager.add(task);
-        }
-
-        int actualHistorySize = historyManager.getHistory().size();
-        int expectedHistorySize = 10;
-
-        assertEquals(expectedHistorySize, actualHistorySize);
     }
 
     @Test
@@ -72,23 +58,51 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    void firstElementInHistoryShouldBeDeletedAfterOversizing() {
-        for (int i = 1; i <= 11; i++) {
-            Epic epic = new Epic("Name", "Description");
-            epic.setId(i);
-            historyManager.add(epic);
-        }
-
-        Task actualFirstElement = historyManager.getHistory().getFirst();
-        Epic epic = new Epic("Name", "Description");
+    void shouldBeEmptyAfterRemovingAllKindOfTasks() {
+        Task task = new Task("TaskName", "TaskDescription", Status.NEW);
+        task.setId(1);
+        Epic epic = new Epic("EpicName", "EpicDescription");
         epic.setId(2);
-        Task expectedFirstElement = epic;
+        SubTask subTask = new SubTask("SubTaskName", "SubTaskDescription", Status.NEW, 2);
+        subTask.setId(3);
 
-        assertEquals(expectedFirstElement, actualFirstElement);
+        historyManager.add(task);
+        historyManager.add(epic);
+        historyManager.add(subTask);
 
-        epic.setId(1);
-        Task expectedDeletedElement = epic;
+        historyManager.remove(2);
+        ArrayList<Task> taskHistoryAfterRemoving = new ArrayList<>(historyManager.getHistory());
 
-        assertNotEquals(expectedDeletedElement, actualFirstElement);
+        assertEquals(2, taskHistoryAfterRemoving.size());
+        assertTrue(taskHistoryAfterRemoving.contains(task));
+        assertFalse(taskHistoryAfterRemoving.contains(epic));
+        assertTrue(taskHistoryAfterRemoving.contains(subTask));
+
+        historyManager.remove(1);
+        taskHistoryAfterRemoving = new ArrayList<>(historyManager.getHistory());
+
+        assertFalse(taskHistoryAfterRemoving.contains(task));
+
+        historyManager.remove(3);
+        taskHistoryAfterRemoving = new ArrayList<>(historyManager.getHistory());
+
+        assertFalse(taskHistoryAfterRemoving.contains(subTask));
+        assertEquals(0, taskHistoryAfterRemoving.size());
+    }
+
+    @Test
+    public void duplicateTaskShouldBeDeleted() {
+        Task task1 = new Task("TaskName", "TaskDescription", Status.NEW);
+        task1.setId(1);
+        Task task2 = new Task("TaskName", "TaskDescription", Status.NEW);
+        task2.setId(1);
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        List<Task> actualHistory = historyManager.getHistory();
+
+        assertEquals(1, actualHistory.size());
+        assertEquals(task2, actualHistory.get(0));
     }
 }
