@@ -62,11 +62,20 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", status=" + status +
-                '}';
+        return "%d,%s,%s,%s,%s".formatted(this.id, Type.TASK, this.name, this.status, this.description);
+    }
+
+    public Task fromString(String string) {
+        String[] fields = string.split(",");
+
+        int id = Integer.getInteger(fields[0]);
+        String name = fields[2];
+        Status status = Status.valueOf(fields[3]);
+        String description = fields[4];
+
+        Task task = new Task(name, description, status);
+        task.setId(id);
+
+        return task;
     }
 }
