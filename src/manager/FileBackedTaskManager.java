@@ -7,6 +7,7 @@ import tasks.Task;
 import utils.CSVTaskFormatUtils;
 
 import java.io.*;
+import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
@@ -109,5 +110,46 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } catch (IOException exception) {
             throw new ManagerSaveException("Ошибка сохранения данных в файл");
         }
+    }
+
+    public static FileBackedTaskManager loadFromFile(File file) {
+        FileBackedTaskManager taskManager = new FileBackedTaskManager(file);
+        List<Integer> taskIds = new ArrayList<>();
+        List<Integer> subTaskIds = new ArrayList<>();
+        Map<Integer, List<Integer>> epicToSubTaskIds = new HashMap<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            reader.readLine();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.isBlank()) {
+                    Task task = CSVTaskFormatUtils.fromString(line);
+                    taskIds.add(task.getId());
+                    if (task instanceof Epic epic) {
+                        taskManager.epics.put(epic.getId(), epic);
+                    } else if (task instanceof SubTask subTask) {
+                        int subTaskId = subTask.getId();
+                        int epicId = subTask.getEpicId();
+                        taskManager.subTasks.put(subTaskId, subTask);
+                        subTaskIds.add(subTaskId);
+                        epicToSubTaskIds.put(epicId, subTaskIds);
+                    } else {
+                        taskManager.tasks.put(task.getId(), task);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        taskManager.idCounter = Collections.max(taskIds);
+
+        for (Map.Entry<Integer, List<Integer>> entry : epicToSubTaskIds.entrySet()) {
+            for (Integer subTaskId : entry.getValue()) {
+                taskManager.epics.get(entry.getKey()).addSubTaskId(subTaskId);
+            }
+        }
+
+        return taskManager;
     }
 }
