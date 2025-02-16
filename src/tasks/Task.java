@@ -4,11 +4,10 @@ import java.util.Objects;
 
 public class Task {
 
-    protected int id;
-    protected String name;
-    protected String description;
-    protected Status status;
-
+    private int id;
+    private String name;
+    private String description;
+    private Status status;
 
     public Task(String name, String description, Status status) {
         this.name = name;
@@ -48,6 +47,10 @@ public class Task {
         this.status = status;
     }
 
+    public Type getType() {
+        return Type.TASK;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
@@ -62,20 +65,11 @@ public class Task {
 
     @Override
     public String toString() {
-        return "%d,%s,%s,%s,%s".formatted(this.id, Type.TASK, this.name, this.status, this.description);
-    }
-
-    public Task fromString(String string) {
-        String[] fields = string.split(",");
-
-        int id = Integer.getInteger(fields[0]);
-        String name = fields[2];
-        Status status = Status.valueOf(fields[3]);
-        String description = fields[4];
-
-        Task task = new Task(name, description, status);
-        task.setId(id);
-
-        return task;
+        return "Task{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

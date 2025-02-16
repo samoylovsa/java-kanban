@@ -1,14 +1,16 @@
 package manager;
 
+import exceptions.ManagerSaveException;
 import tasks.Epic;
 import tasks.SubTask;
 import tasks.Task;
+import utils.CSVTaskFormatUtils;
 
 import java.io.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
-    private File file;
+    private final File file;
 
     public FileBackedTaskManager(File file) {
         this.file = file;
@@ -94,18 +96,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (Writer writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write("id,type,name,status,description,epic\n");
+            writer.write(CSVTaskFormatUtils.getCSVTitle() + "\n");
             for (Task task : tasks.values()) {
-                writer.write(task.toString() + "\n");
+                writer.write(CSVTaskFormatUtils.toString(task) + "\n");
             }
             for (Epic epic : epics.values()) {
-                writer.write(epic.toString() + "\n");
+                writer.write(CSVTaskFormatUtils.toString(epic) + "\n");
             }
             for (SubTask subTask : subTasks.values()) {
-                writer.write(subTask.toString() + "\n");
+                writer.write(CSVTaskFormatUtils.toString(subTask) + "\n");
             }
         } catch (IOException exception) {
-            throw new ManagerSaveException();
+            throw new ManagerSaveException("Ошибка сохранения данных в файл");
         }
     }
 }
