@@ -139,11 +139,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("Не удалось прочитать файл, возвращаю менеджер без данных");
+            return taskManager;
         }
 
         taskManager.idCounter = Collections.max(taskIds);
-
         for (Map.Entry<Integer, List<Integer>> entry : epicToSubTaskIds.entrySet()) {
             for (Integer subTaskId : entry.getValue()) {
                 taskManager.epics.get(entry.getKey()).addSubTaskId(subTaskId);
