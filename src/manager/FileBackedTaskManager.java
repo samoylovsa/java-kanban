@@ -7,7 +7,9 @@ import tasks.Task;
 import utils.CSVTaskFormatUtils;
 
 import java.io.*;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
@@ -114,9 +116,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager taskManager = new FileBackedTaskManager(file);
-        List<Integer> taskIds = new ArrayList<>();
-        List<Integer> subTaskIds = new ArrayList<>();
-        Map<Integer, List<Integer>> epicToSubTaskIds = new HashMap<>();
+        Set<Integer> taskIds = new HashSet<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             reader.readLine();
@@ -128,11 +128,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     if (task instanceof Epic epic) {
                         taskManager.epics.put(epic.getId(), epic);
                     } else if (task instanceof SubTask subTask) {
-                        int subTaskId = subTask.getId();
-                        int epicId = subTask.getEpicId();
-                        taskManager.subTasks.put(subTaskId, subTask);
-                        subTaskIds.add(subTaskId);
-                        epicToSubTaskIds.put(epicId, subTaskIds);
+                        taskManager.subTasks.put(subTask.getId(), subTask);
                     } else {
                         taskManager.tasks.put(task.getId(), task);
                     }
@@ -143,11 +139,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             return taskManager;
         }
 
-        taskManager.idCounter = Collections.max(taskIds);
-        for (Map.Entry<Integer, List<Integer>> entry : epicToSubTaskIds.entrySet()) {
-            for (Integer subTaskId : entry.getValue()) {
-                taskManager.epics.get(entry.getKey()).addSubTaskId(subTaskId);
-            }
+        for (SubTask subTask : taskManager.subTasks.values()) {
+            int epicId = subTask.getEpicId();
+            int subTaskId = subTask.getId();
+            taskManager.epics.get(epicId).addSubTaskId(subTaskId);
+        }
+
+        if (!taskIds.isEmpty()) {
+            taskManager.idCounter = Collections.max(taskIds);
+        } else {
+            taskManager.idCounter = 0;
         }
 
         return taskManager;
