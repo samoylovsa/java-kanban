@@ -135,8 +135,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Не удалось прочитать файл, возвращаю менеджер без данных");
-            return taskManager;
+            throw new RuntimeException("Не удалось прочитать данные из файла");
         }
 
         for (SubTask subTask : taskManager.subTasks.values()) {
@@ -147,8 +146,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         if (!taskIds.isEmpty()) {
             taskManager.idCounter = Collections.max(taskIds);
-        } else {
-            taskManager.idCounter = 0;
         }
 
         return taskManager;
