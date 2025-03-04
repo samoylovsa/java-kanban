@@ -5,6 +5,8 @@ import tasks.Status;
 import tasks.SubTask;
 import tasks.Task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -42,16 +44,17 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int createSubTask(SubTask subTask) {
         int epicId = subTask.getEpicId();
-        if (!epics.isEmpty() && epics.containsKey(epicId)) {
+        if (epics.containsKey(epicId)) {
             subTask.setId(generateId());
             int subTaskId = subTask.getId();
             epics.get(epicId).addSubTaskId(subTaskId);
             subTasks.put(subTaskId, subTask);
             updateEpicStatus(epics.get(epicId));
+            updateEpicTime(epics.get(epicId));
 
             return subTaskId;
         } else {
-            System.out.println("Пустой список эпиков или не найден эпик с epicId: " + epicId);
+            System.out.println("Не найден эпик с epicId: " + epicId);
             return -1;
         }
     }
@@ -104,6 +107,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         subTasks.put(newSubTaskId, subTask);
         updateEpicStatus(existingEpic);
+        updateEpicTime(existingEpic);
 
         return true;
     }
@@ -190,6 +194,7 @@ public class InMemoryTaskManager implements TaskManager {
         epic.deleteSubTaskId(id);
         subTasks.remove(id);
         updateEpicStatus(epic);
+        updateEpicTime(epic);
         historyManager.remove(id);
     }
 
@@ -231,6 +236,7 @@ public class InMemoryTaskManager implements TaskManager {
         for (Epic processedEpic : processedEpics) {
             processedEpic.deleteAllSubTaskId();
             updateEpicStatus(processedEpic);
+            updateEpicTime(processedEpic);
         }
     }
 
@@ -269,15 +275,15 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private void updateEpicStatus(Epic epic) {
-        ArrayList<Integer> subTasksList = epic.getSubTaskIdList();
-        if (subTasksList.isEmpty()) {
+        ArrayList<Integer> subTasksIdList = epic.getSubTaskIdList();
+        if (subTasksIdList.isEmpty()) {
             epic.setStatus(Status.NEW);
             return;
         }
-        int subTasksQuantity = subTasksList.size();
+        int subTasksQuantity = subTasksIdList.size();
         int newStatusCounter = 0;
         int doneStatusCounter = 0;
-        for (Integer id : subTasksList) {
+        for (Integer id : subTasksIdList) {
             Status subTaskStatus = subTasks.get(id).getStatus();
             if (subTaskStatus.equals(Status.NEW)) {
                 newStatusCounter++;
@@ -291,6 +297,42 @@ public class InMemoryTaskManager implements TaskManager {
             epic.setStatus(Status.DONE);
         } else {
             epic.setStatus(Status.IN_PROGRESS);
+        }
+    }
+
+    private void updateEpicTime(Epic epic) {
+        ArrayList<Integer> subTasksIdList = epic.getSubTaskIdList();
+        if (subTasksIdList.isEmpty()) {
+            epic.resetTime();
+            return;
+        }
+
+        Optional<LocalDateTime> minStartTime = subTasksIdList.stream()
+                .map(subTasks::get)
+                .filter(subTask -> subTask.getStartTime() != null)
+                .map(SubTask::getStartTime)
+                .min(LocalDateTime::compareTo);
+
+        Optional<LocalDateTime> maxEndTime = subTasksIdList.stream()
+                .map(subTasks::get)
+                .filter(subTask -> subTask.getEndTime() != null)
+                .map(SubTask::getEndTime)
+                .max(LocalDateTime::compareTo);
+
+        Duration totalDuration = subTasksIdList.stream()
+                .map(subTasks::get)
+                .filter(subTask -> subTask.getStartTime() != null && subTask.getEndTime() != null)
+                .map(SubTask::getDuration)
+                .reduce(Duration.ZERO, Duration::plus);
+        
+        if (minStartTime.isPresent() && maxEndTime.isPresent()) {
+            LocalDateTime startTime = minStartTime.get();
+            LocalDateTime endTime = maxEndTime.get();
+            epic.setStartTime(startTime);
+            epic.setEndTime(endTime);
+            epic.setDuration(totalDuration);
+        } else {
+            epic.resetTime();
         }
     }
 
