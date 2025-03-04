@@ -324,7 +324,7 @@ public class InMemoryTaskManager implements TaskManager {
                 .filter(subTask -> subTask.getStartTime() != null && subTask.getEndTime() != null)
                 .map(SubTask::getDuration)
                 .reduce(Duration.ZERO, Duration::plus);
-        
+
         if (minStartTime.isPresent() && maxEndTime.isPresent()) {
             LocalDateTime startTime = minStartTime.get();
             LocalDateTime endTime = maxEndTime.get();

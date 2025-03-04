@@ -7,6 +7,8 @@ import tasks.Status;
 import tasks.SubTask;
 import tasks.Task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class InMemoryHistoryManagerTest {
 
     private HistoryManager historyManager;
+    private LocalDateTime startTime = LocalDateTime.now();
+    private Duration duration = Duration.ofMinutes(120);
 
     @BeforeEach
     void beforeEach() {
@@ -24,11 +28,11 @@ class InMemoryHistoryManagerTest {
 
     @Test
     void taskHistoryCanContainTasksAndHisAncestors() {
-        Task task = new Task("TaskName", "TaskDescription", Status.NEW);
+        Task task = new Task("TaskName", "TaskDescription", Status.NEW, startTime, duration);
         task.setId(1);
         Epic epic = new Epic("EpicName", "EpicDescription");
         epic.setId(2);
-        SubTask subTask = new SubTask("SubTaskName", "SubTaskDescription", Status.NEW, 2);
+        SubTask subTask = new SubTask("SubTaskName", "SubTaskDescription", Status.NEW, 2, startTime, duration);
         subTask.setId(3);
 
         historyManager.add(task);
@@ -59,11 +63,11 @@ class InMemoryHistoryManagerTest {
 
     @Test
     void shouldBeEmptyAfterRemovingAllKindOfTasks() {
-        Task task = new Task("TaskName", "TaskDescription", Status.NEW);
+        Task task = new Task("TaskName", "TaskDescription", Status.NEW, startTime, duration);
         task.setId(1);
         Epic epic = new Epic("EpicName", "EpicDescription");
         epic.setId(2);
-        SubTask subTask = new SubTask("SubTaskName", "SubTaskDescription", Status.NEW, 2);
+        SubTask subTask = new SubTask("SubTaskName", "SubTaskDescription", Status.NEW, 2, startTime, duration);
         subTask.setId(3);
 
         historyManager.add(task);
@@ -92,9 +96,9 @@ class InMemoryHistoryManagerTest {
 
     @Test
     public void duplicateTaskShouldBeDeleted() {
-        Task task1 = new Task("TaskName", "TaskDescription", Status.NEW);
+        Task task1 = new Task("TaskName", "TaskDescription", Status.NEW, startTime, duration);
         task1.setId(1);
-        Task task2 = new Task("TaskName", "TaskDescription", Status.NEW);
+        Task task2 = new Task("TaskName", "TaskDescription", Status.NEW, startTime, duration);
         task2.setId(1);
 
         historyManager.add(task1);

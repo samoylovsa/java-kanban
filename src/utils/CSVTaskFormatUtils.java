@@ -9,8 +9,8 @@ import java.time.format.DateTimeFormatter;
 
 public final class CSVTaskFormatUtils {
 
-    private static final String TITLE = "id,type,name,status,description,epic";
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm");
+    private static final String TITLE = "id,type,name,status,description,startTime,endTime,duration,epic";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     private CSVTaskFormatUtils() {
     }
@@ -20,8 +20,9 @@ public final class CSVTaskFormatUtils {
     }
 
     public static String toString(Task task) {
-        String formattedStartTime = task.getStartTime().format(DATE_TIME_FORMATTER);
-        String formattedEndTime = task.getEndTime().format(DATE_TIME_FORMATTER);
+        String formattedStartTime = task.getStartTime() == null ? "null" : task.getStartTime().format(DATE_TIME_FORMATTER);
+        String formattedEndTime = task.getEndTime() == null ? "null" : task.getEndTime().format(DATE_TIME_FORMATTER);
+        String formattedDuration = task.getDuration() == null ? "null" : task.getDuration().toString();
 
         if (task instanceof SubTask subTask) {
             return "%d,%s,%s,%s,%s,%s,%s,%s,%d".formatted(
@@ -32,7 +33,7 @@ public final class CSVTaskFormatUtils {
                     subTask.getDescription(),
                     formattedStartTime,
                     formattedEndTime,
-                    subTask.getDuration(),
+                    formattedDuration,
                     subTask.getEpicId()
             );
         }
@@ -44,7 +45,7 @@ public final class CSVTaskFormatUtils {
                 task.getDescription(),
                 formattedStartTime,
                 formattedEndTime,
-                task.getDuration()
+                formattedDuration
         );
     }
 
@@ -61,9 +62,9 @@ public final class CSVTaskFormatUtils {
         String name = fields[2];
         Status status = Status.valueOf(fields[3]);
         String description = fields[4];
-        LocalDateTime startTime = LocalDateTime.parse(fields[5], DATE_TIME_FORMATTER);
-        LocalDateTime endTime = LocalDateTime.parse(fields[6], DATE_TIME_FORMATTER);
-        Duration duration = Duration.parse(fields[7]);
+        LocalDateTime startTime = fields[5].equals("null") ? null : LocalDateTime.parse(fields[5], DATE_TIME_FORMATTER);
+        LocalDateTime endTime = fields[6].equals("null") ? null : LocalDateTime.parse(fields[6], DATE_TIME_FORMATTER);
+        Duration duration = fields[7].equals("null") ? null : Duration.parse(fields[7]);
 
         switch (taskType) {
             case TASK:
@@ -83,7 +84,7 @@ public final class CSVTaskFormatUtils {
                     throw new TaskParseException("Недостаточно данных в переданной строке: " + fieldsNumber +
                             " значений в строке");
                 }
-                int epicId = Integer.parseInt(fields[5]);
+                int epicId = Integer.parseInt(fields[8]);
                 SubTask subTask = new SubTask(name, description, status, epicId, startTime, duration);
                 subTask.setId(id);
                 return subTask;
