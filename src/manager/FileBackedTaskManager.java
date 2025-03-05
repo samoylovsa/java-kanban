@@ -152,4 +152,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         return taskManager;
     }
+
+    private void addToPrioritizedTasks(Task task) {
+        if (task.getStartTime() != null) {
+            prioritizedTasks.add(task);
+        }
+    }
 }

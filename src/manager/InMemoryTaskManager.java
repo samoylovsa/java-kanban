@@ -28,9 +28,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int createTask(Task newTask) {
+        if (newTask.getStartTime() == null || newTask.getEndTime() == null) {
+            System.out.println("У создаваемой задачи нет startTime или endTime");
+            return -1;
+        }
+
+        boolean isIntersectByTime = prioritizedTasks.stream()
+                .anyMatch(existingTask -> isIntersectByTime(existingTask, newTask));
+        if (isIntersectByTime) {
+            System.out.println("Создаваемая задача пересекается по времени с уже существующими задачами");
+            return -1;
+        }
+
         newTask.setId(generateId());
         tasks.put(newTask.getId(), newTask);
-        addToPrioritizedTasks(newTask);
+        prioritizedTasks.add(newTask);
 
         return newTask.getId();
     }
@@ -46,15 +58,27 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int createSubTask(SubTask newSubTask) {
+        if (newSubTask.getStartTime() == null || newSubTask.getEndTime() == null) {
+            System.out.println("У создаваемой подзадачи нет startTime или endTime");
+            return -1;
+        }
+
+        boolean isIntersectByTime = prioritizedTasks.stream()
+                .anyMatch(existingSubTask -> isIntersectByTime(existingSubTask, newSubTask));
+        if (isIntersectByTime) {
+            System.out.println("Создаваемая подзадача пересекается по времени с уже существующими подзадачами");
+            return -1;
+        }
+
         int epicId = newSubTask.getEpicId();
         if (epics.containsKey(epicId)) {
             newSubTask.setId(generateId());
             int subTaskId = newSubTask.getId();
             epics.get(epicId).addSubTaskId(subTaskId);
             subTasks.put(subTaskId, newSubTask);
+            prioritizedTasks.add(newSubTask);
             updateEpicStatus(epics.get(epicId));
             updateEpicTime(epics.get(epicId));
-            addToPrioritizedTasks(newSubTask);
 
             return subTaskId;
         } else {
@@ -67,16 +91,31 @@ public class InMemoryTaskManager implements TaskManager {
     public boolean updateTask(Task updatedTask) {
         int updatedTaskId = updatedTask.getId();
         Task existingTask = tasks.get(updatedTaskId);
-        if (existingTask != null) {
-            tasks.put(updatedTaskId, updatedTask);
-            prioritizedTasks.remove(existingTask);
-            addToPrioritizedTasks(updatedTask);
 
-            return true;
-        } else {
-            System.out.println("Не найдена задача с updatedTaskId: " + updatedTaskId);
+        if (existingTask == null) {
+            System.out.println("Не найдена задача с taskId: " + updatedTaskId);
             return false;
         }
+
+        if (updatedTask.getStartTime() == null || updatedTask.getEndTime() == null) {
+            System.out.println("У обновляемой задачи нет startTime или endTime");
+            return false;
+        }
+
+        boolean isIntersectByTime = prioritizedTasks.stream()
+                .filter(task -> !task.equals(existingTask))
+                .anyMatch(task -> isIntersectByTime(task, updatedTask));
+
+        if (isIntersectByTime) {
+            System.out.println("Обновляемая задача пересекается по времени с уже существующими задачами");
+            return false;
+        }
+
+        tasks.put(updatedTaskId, updatedTask);
+        prioritizedTasks.remove(existingTask);
+        prioritizedTasks.add(updatedTask);
+
+        return true;
     }
 
     @Override
@@ -101,22 +140,39 @@ public class InMemoryTaskManager implements TaskManager {
             System.out.println("Не найдена подзадача с id: " + updatedSubTaskId);
             return false;
         }
+
+        if (updatedSubTask.getStartTime() == null || updatedSubTask.getEndTime() == null) {
+            System.out.println("У обновляемой подзадачи нет startTime или endTime");
+            return false;
+        }
+
+        boolean isIntersectByTime = prioritizedTasks.stream()
+                .filter(task -> !task.equals(existingSubTask))
+                .anyMatch(task -> isIntersectByTime(task, updatedSubTask));
+
+        if (isIntersectByTime) {
+            System.out.println("Обновляемая подзадача пересекается по времени с уже существующими подзадачами");
+            return false;
+        }
+
         int updatedSubTaskEpicId = updatedSubTask.getEpicId();
         Epic existingEpic = epics.get(updatedSubTaskEpicId);
         if (existingEpic == null) {
             System.out.println("Не найден эпик с таким epicId: " + updatedSubTaskEpicId);
             return false;
         }
+
         int existingSubTaskEpicId = existingSubTask.getEpicId();
         if (updatedSubTaskEpicId != existingSubTaskEpicId) {
             System.out.println("epicId новой подзадачи не равен epicId существующей подзадачи");
             return false;
         }
+
         subTasks.put(updatedSubTaskId, updatedSubTask);
+        prioritizedTasks.remove(existingSubTask);
+        prioritizedTasks.add(updatedSubTask);
         updateEpicStatus(existingEpic);
         updateEpicTime(existingEpic);
-        prioritizedTasks.remove(existingSubTask);
-        addToPrioritizedTasks(updatedSubTask);
 
         return true;
     }
@@ -293,12 +349,6 @@ public class InMemoryTaskManager implements TaskManager {
         return new ArrayList<>(prioritizedTasks);
     }
 
-    protected void addToPrioritizedTasks(Task task) {
-        if (task.getStartTime() != null) {
-            prioritizedTasks.add(task);
-        }
-    }
-
     private void updateEpicStatus(Epic epic) {
         ArrayList<Integer> subTasksIdList = epic.getSubTaskIdList();
         if (subTasksIdList.isEmpty()) {
@@ -363,5 +413,14 @@ public class InMemoryTaskManager implements TaskManager {
 
     private int generateId() {
         return ++idCounter;
+    }
+
+    private boolean isIntersectByTime(Task firstTask, Task secondTask) {
+        LocalDateTime firstStartTime = firstTask.getStartTime();
+        LocalDateTime firstEndTime = firstTask.getEndTime();
+        LocalDateTime secondStartTime = secondTask.getStartTime();
+        LocalDateTime secondEndTime = secondTask.getEndTime();
+
+        return firstStartTime.isBefore(secondEndTime) && secondStartTime.isBefore(firstEndTime);
     }
 }
