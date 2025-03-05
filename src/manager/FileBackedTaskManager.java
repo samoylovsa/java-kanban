@@ -20,62 +20,62 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public int createTask(Task task) {
-        int id = super.createTask(task);
+    public int createTask(Task newTask) {
+        int id = super.createTask(newTask);
         save();
         return id;
     }
 
     @Override
-    public int createEpic(Epic epic) {
-        int id = super.createEpic(epic);
+    public int createEpic(Epic newEpic) {
+        int id = super.createEpic(newEpic);
         save();
         return id;
     }
 
     @Override
-    public int createSubTask(SubTask subTask) {
-        int id = super.createSubTask(subTask);
+    public int createSubTask(SubTask newSubTask) {
+        int id = super.createSubTask(newSubTask);
         save();
         return id;
     }
 
     @Override
-    public boolean updateTask(Task task) {
-        boolean isUpdated = super.updateTask(task);
+    public boolean updateTask(Task updatedTask) {
+        boolean isUpdated = super.updateTask(updatedTask);
         save();
         return isUpdated;
     }
 
     @Override
-    public boolean updateEpic(Epic epic) {
-        boolean isUpdated = super.updateEpic(epic);
+    public boolean updateEpic(Epic updatedEpic) {
+        boolean isUpdated = super.updateEpic(updatedEpic);
         save();
         return isUpdated;
     }
 
     @Override
-    public boolean updateSubTask(SubTask subTask) {
-        boolean isUpdated = super.updateSubTask(subTask);
+    public boolean updateSubTask(SubTask updatedSubTask) {
+        boolean isUpdated = super.updateSubTask(updatedSubTask);
         save();
         return isUpdated;
     }
 
     @Override
-    public void deleteTask(int id) {
-        super.deleteTask(id);
+    public void deleteTask(int taskId) {
+        super.deleteTask(taskId);
         save();
     }
 
     @Override
-    public void deleteEpic(int id) {
-        super.deleteEpic(id);
+    public void deleteEpic(int epicId) {
+        super.deleteEpic(epicId);
         save();
     }
 
     @Override
-    public void deleteSubTask(int id) {
-        super.deleteSubTask(id);
+    public void deleteSubTask(int subTaskId) {
+        super.deleteSubTask(subTaskId);
         save();
     }
 

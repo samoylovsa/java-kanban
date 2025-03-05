@@ -12,45 +12,49 @@ import java.util.*;
 public class InMemoryTaskManager implements TaskManager {
 
     protected int idCounter = 0;
-    protected final HashMap<Integer, Task> tasks;
-    protected final HashMap<Integer, Epic> epics;
-    protected final HashMap<Integer, SubTask> subTasks;
+    protected final Map<Integer, Task> tasks;
+    protected final Map<Integer, Epic> epics;
+    protected final Map<Integer, SubTask> subTasks;
     protected final HistoryManager historyManager;
+    protected final Set<Task> prioritizedTasks;
 
     InMemoryTaskManager() {
         tasks = new HashMap<>();
         epics = new HashMap<>();
         subTasks = new HashMap<>();
         historyManager = Manager.getDefaultHistory();
+        prioritizedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
     }
 
     @Override
-    public int createTask(Task task) {
-        task.setId(generateId());
-        tasks.put(task.getId(), task);
+    public int createTask(Task newTask) {
+        newTask.setId(generateId());
+        tasks.put(newTask.getId(), newTask);
+        addToPrioritizedTasks(newTask);
 
-        return task.getId();
+        return newTask.getId();
     }
 
     @Override
-    public int createEpic(Epic epic) {
-        epic.setId(generateId());
-        updateEpicStatus(epic);
-        epics.put(epic.getId(), epic);
+    public int createEpic(Epic newEpic) {
+        newEpic.setId(generateId());
+        updateEpicStatus(newEpic);
+        epics.put(newEpic.getId(), newEpic);
 
-        return epic.getId();
+        return newEpic.getId();
     }
 
     @Override
-    public int createSubTask(SubTask subTask) {
-        int epicId = subTask.getEpicId();
+    public int createSubTask(SubTask newSubTask) {
+        int epicId = newSubTask.getEpicId();
         if (epics.containsKey(epicId)) {
-            subTask.setId(generateId());
-            int subTaskId = subTask.getId();
+            newSubTask.setId(generateId());
+            int subTaskId = newSubTask.getId();
             epics.get(epicId).addSubTaskId(subTaskId);
-            subTasks.put(subTaskId, subTask);
+            subTasks.put(subTaskId, newSubTask);
             updateEpicStatus(epics.get(epicId));
             updateEpicTime(epics.get(epicId));
+            addToPrioritizedTasks(newSubTask);
 
             return subTaskId;
         } else {
@@ -60,61 +64,66 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public boolean updateTask(Task task) {
-        int taskId = task.getId();
-        Task existingTask = tasks.get(taskId);
+    public boolean updateTask(Task updatedTask) {
+        int updatedTaskId = updatedTask.getId();
+        Task existingTask = tasks.get(updatedTaskId);
         if (existingTask != null) {
-            tasks.put(taskId, task);
+            tasks.put(updatedTaskId, updatedTask);
+            prioritizedTasks.remove(existingTask);
+            addToPrioritizedTasks(updatedTask);
+
             return true;
         } else {
-            System.out.println("Не найдена задача с taskId: " + taskId);
+            System.out.println("Не найдена задача с updatedTaskId: " + updatedTaskId);
             return false;
         }
     }
 
     @Override
-    public boolean updateEpic(Epic epic) {
-        int epicId = epic.getId();
-        Epic existingEpic = epics.get(epicId);
+    public boolean updateEpic(Epic updatedEpic) {
+        int updatedEpicId = updatedEpic.getId();
+        Epic existingEpic = epics.get(updatedEpicId);
         if (existingEpic != null) {
-            existingEpic.setName(epic.getName());
-            existingEpic.setDescription(epic.getDescription());
+            existingEpic.setName(updatedEpic.getName());
+            existingEpic.setDescription(updatedEpic.getDescription());
             return true;
         } else {
-            System.out.println("Не найден эпик с epicId: " + epicId);
+            System.out.println("Не найден эпик с updatedEpicId: " + updatedEpicId);
             return false;
         }
     }
 
     @Override
-    public boolean updateSubTask(SubTask subTask) {
-        int newSubTaskId = subTask.getId();
-        SubTask existingSubTask = subTasks.get(newSubTaskId);
+    public boolean updateSubTask(SubTask updatedSubTask) {
+        int updatedSubTaskId = updatedSubTask.getId();
+        SubTask existingSubTask = subTasks.get(updatedSubTaskId);
         if (existingSubTask == null) {
-            System.out.println("Не найдена подзадача с id: " + newSubTaskId);
+            System.out.println("Не найдена подзадача с id: " + updatedSubTaskId);
             return false;
         }
-        int newSubTaskEpicId = subTask.getEpicId();
-        Epic existingEpic = epics.get(newSubTaskEpicId);
+        int updatedSubTaskEpicId = updatedSubTask.getEpicId();
+        Epic existingEpic = epics.get(updatedSubTaskEpicId);
         if (existingEpic == null) {
-            System.out.println("Не найден эпик с таким epicId: " + newSubTaskEpicId);
+            System.out.println("Не найден эпик с таким epicId: " + updatedSubTaskEpicId);
             return false;
         }
         int existingSubTaskEpicId = existingSubTask.getEpicId();
-        if (newSubTaskEpicId != existingSubTaskEpicId) {
+        if (updatedSubTaskEpicId != existingSubTaskEpicId) {
             System.out.println("epicId новой подзадачи не равен epicId существующей подзадачи");
             return false;
         }
-        subTasks.put(newSubTaskId, subTask);
+        subTasks.put(updatedSubTaskId, updatedSubTask);
         updateEpicStatus(existingEpic);
         updateEpicTime(existingEpic);
+        prioritizedTasks.remove(existingSubTask);
+        addToPrioritizedTasks(updatedSubTask);
 
         return true;
     }
 
     @Override
-    public final Task getTask(int id) {
-        Task task = tasks.get(id);
+    public final Task getTask(int taskId) {
+        Task task = tasks.get(taskId);
         if (task != null) {
             historyManager.add(task);
         }
@@ -123,8 +132,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public final Epic getEpic(int id) {
-        Epic epic = epics.get(id);
+    public final Epic getEpic(int epicId) {
+        Epic epic = epics.get(epicId);
         if (epic != null) {
             historyManager.add(epic);
         }
@@ -133,8 +142,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public final SubTask getSubTask(int id) {
-        SubTask subTask = subTasks.get(id);
+    public final SubTask getSubTask(int subTaskId) {
+        SubTask subTask = subTasks.get(subTaskId);
         if (subTask != null) {
             historyManager.add(subTask);
         }
@@ -157,51 +166,55 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void deleteTask(int id) {
-        tasks.remove(id);
-        historyManager.remove(id);
+    public void deleteTask(int taskId) {
+        Task task = tasks.get(taskId);
+        tasks.remove(taskId);
+        historyManager.remove(taskId);
+        prioritizedTasks.remove(task);
     }
 
     @Override
-    public void deleteEpic(int id) {
-        if (!epics.containsKey(id)) {
-            System.out.println("Не существует эпика с указанным id: " + id);
+    public void deleteEpic(int epicId) {
+        if (!epics.containsKey(epicId)) {
+            System.out.println("Не существует эпика с указанным epicId: " + epicId);
             return;
         }
-        ArrayList<Integer> subTaskIdList = epics.get(id).getSubTaskIdList();
+        ArrayList<Integer> subTaskIdList = epics.get(epicId).getSubTaskIdList();
         for (Integer subTaskId : subTaskIdList) {
             subTasks.remove(subTaskId);
             historyManager.remove(subTaskId);
         }
-        epics.remove(id);
-        historyManager.remove(id);
+        epics.remove(epicId);
+        historyManager.remove(epicId);
     }
 
     @Override
-    public void deleteSubTask(int id) {
-        SubTask subTask = subTasks.get(id);
+    public void deleteSubTask(int subTaskId) {
+        SubTask subTask = subTasks.get(subTaskId);
         if (subTask == null) {
-            System.out.println("Не существует подзадачи с указанным id: " + id);
+            System.out.println("Не существует подзадачи с указанным subTaskId: " + subTaskId);
             return;
         }
         int epicId = subTask.getEpicId();
         Epic epic = epics.get(epicId);
         if (epic == null) {
-            System.out.println("Для подзадачи с id: " + id + " не найден эпик с id: " + epicId);
-            subTasks.remove(id);
+            System.out.println("Для подзадачи с subTaskId: " + subTaskId + " не найден эпик с subTaskId: " + epicId);
+            subTasks.remove(subTaskId);
             return;
         }
-        epic.deleteSubTaskId(id);
-        subTasks.remove(id);
+        epic.deleteSubTaskId(subTaskId);
+        subTasks.remove(subTaskId);
         updateEpicStatus(epic);
         updateEpicTime(epic);
-        historyManager.remove(id);
+        historyManager.remove(subTaskId);
+        prioritizedTasks.remove(subTask);
     }
 
     @Override
     public void deleteAllTasks() {
         for (Integer id : tasks.keySet()) {
             historyManager.remove(id);
+            prioritizedTasks.remove(tasks.get(id));
         }
         tasks.clear();
     }
@@ -231,6 +244,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         for (Integer id : subTasks.keySet()) {
             historyManager.remove(id);
+            prioritizedTasks.remove(subTasks.get(id));
         }
         subTasks.clear();
         for (Epic processedEpic : processedEpics) {
@@ -241,10 +255,10 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public final List<SubTask> getSubTasksByEpic(int id) {
-        Epic epic = epics.get(id);
+    public final List<SubTask> getSubTasksByEpic(int epicId) {
+        Epic epic = epics.get(epicId);
         if (epic == null) {
-            System.out.println("Не существует эпика с id: " + id);
+            System.out.println("Не существует эпика с epicId: " + epicId);
             return null;
         }
         ArrayList<Integer> subTaskIdList = epic.getSubTaskIdList();
@@ -272,6 +286,17 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public final List<Task> getHistory() {
         return historyManager.getHistory();
+    }
+
+    @Override
+    public final List<Task> getPrioritizedTasks() {
+        return new ArrayList<>(prioritizedTasks);
+    }
+
+    private void addToPrioritizedTasks(Task task) {
+        if (task.getStartTime() != null) {
+            prioritizedTasks.add(task);
+        }
     }
 
     private void updateEpicStatus(Epic epic) {
