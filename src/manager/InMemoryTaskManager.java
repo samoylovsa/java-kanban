@@ -293,7 +293,7 @@ public class InMemoryTaskManager implements TaskManager {
         return new ArrayList<>(prioritizedTasks);
     }
 
-    private void addToPrioritizedTasks(Task task) {
+    protected void addToPrioritizedTasks(Task task) {
         if (task.getStartTime() != null) {
             prioritizedTasks.add(task);
         }
