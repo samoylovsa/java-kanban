@@ -28,6 +28,9 @@ public class SubTask extends Task {
                 ", name='" + this.getName() + '\'' +
                 ", description='" + this.getDescription() + '\'' +
                 ", status=" + this.getStatus() +
+                ", startTime=" + this.getStartTime() +
+                ", endTime=" + this.getEndTime() +
+                ", duration=" + this.getDuration() +
                 '}';
     }
 }
