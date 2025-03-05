@@ -10,6 +10,7 @@ import java.io.*;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
@@ -100,15 +101,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private void save() {
         try (Writer writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(CSVTaskFormatUtils.getCSVTitle() + "\n");
-            for (Task task : tasks.values()) {
-                writer.write(CSVTaskFormatUtils.toString(task) + "\n");
-            }
-            for (Epic epic : epics.values()) {
-                writer.write(CSVTaskFormatUtils.toString(epic) + "\n");
-            }
-            for (SubTask subTask : subTasks.values()) {
-                writer.write(CSVTaskFormatUtils.toString(subTask) + "\n");
-            }
+            Stream.concat(Stream.concat(tasks.values().stream(), epics.values().stream()), subTasks.values().stream())
+                    .map(CSVTaskFormatUtils::toString)
+                    .forEach(taskString -> {
+                        try {
+                            writer.write(taskString + "\n");
+                        } catch (IOException e) {
+                            throw new ManagerSaveException("Ошибка сохранения данных в файл");
+                        }
+                    });
         } catch (IOException exception) {
             throw new ManagerSaveException("Ошибка сохранения данных в файл");
         }
@@ -140,11 +141,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             throw new RuntimeException("Не удалось прочитать данные из файла");
         }
 
-        for (SubTask subTask : taskManager.subTasks.values()) {
-            int epicId = subTask.getEpicId();
-            int subTaskId = subTask.getId();
-            taskManager.epics.get(epicId).addSubTaskId(subTaskId);
-        }
+        taskManager.subTasks.values()
+                .forEach(subTask -> {
+                    int epicId = subTask.getEpicId();
+                    int subTaskId = subTask.getId();
+                    taskManager.epics.get(epicId)
+                            .addSubTaskId(subTaskId);
+                });
 
         if (!taskIds.isEmpty()) {
             taskManager.idCounter = Collections.max(taskIds);
