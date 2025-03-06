@@ -47,8 +47,8 @@ public class FileBackedTaskManagerTest {
             bufferedReader = new BufferedReader(new FileReader(file));
 
             Task firstTask = new Task("TaskName1", "TaskDescription1", Status.NEW, startTime, duration);
-            Task secondTask = new Task("TaskName2", "TaskDescription2", Status.IN_PROGRESS, startTime, duration);
-            Task thirdTask = new Task("TaskName3", "TaskDescription3", Status.DONE, startTime, duration);
+            Task secondTask = new Task("TaskName2", "TaskDescription2", Status.IN_PROGRESS, startTime.plusMinutes(120), duration);
+            Task thirdTask = new Task("TaskName3", "TaskDescription3", Status.DONE, startTime.plusMinutes(240), duration);
             Epic firstEpic = new Epic("EpicName1", "EpicDescription1");
             Epic secondEpic = new Epic("EpicName2", "EpicDescription2");
             Epic thirdEpic = new Epic("EpicName3", "EpicDescription3");
@@ -60,9 +60,9 @@ public class FileBackedTaskManagerTest {
             secondEpicId = taskManager.createEpic(secondEpic);
             thirdEpicId = taskManager.createEpic(thirdEpic);
 
-            SubTask firstSubTask = new SubTask("SubTaskName1", "SubTaskDescription1", Status.NEW, firstEpicId, startTime, duration);
-            SubTask secondSubTask = new SubTask("SubTaskName2", "SubTaskDescription2", Status.IN_PROGRESS, secondEpicId, startTime, duration);
-            SubTask thirdSubTask = new SubTask("SubTaskName3", "SubTaskDescription3", Status.DONE, thirdEpicId, startTime, duration);
+            SubTask firstSubTask = new SubTask("SubTaskName1", "SubTaskDescription1", Status.NEW, firstEpicId, startTime.plusMinutes(360), duration);
+            SubTask secondSubTask = new SubTask("SubTaskName2", "SubTaskDescription2", Status.IN_PROGRESS, secondEpicId, startTime.plusMinutes(480), duration);
+            SubTask thirdSubTask = new SubTask("SubTaskName3", "SubTaskDescription3", Status.DONE, thirdEpicId, startTime.plusMinutes(600), duration);
 
             firstSubTaskId = taskManager.createSubTask(firstSubTask);
             secondSubTaskId = taskManager.createSubTask(secondSubTask);
@@ -85,7 +85,7 @@ public class FileBackedTaskManagerTest {
     public void firstLineShouldHaveTitle() throws IOException {
         String title = "id,type,name,status,description,startTime,endTime,duration,epic";
 
-        Task task = new Task("Name", "Description", Status.NEW, startTime, duration);
+        Task task = new Task("Name", "Description", Status.NEW, startTime.plusMinutes(720), duration);
         taskManager.createTask(task);
 
         String firstLine = bufferedReader.readLine();

@@ -30,15 +30,13 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int createTask(Task newTask) {
         if (newTask.getStartTime() == null || newTask.getEndTime() == null) {
-            System.out.println("У создаваемой задачи нет startTime или endTime");
-            return -1;
+            throw new IllegalArgumentException("У создаваемой задачи нет startTime или endTime");
         }
 
         boolean isIntersectByTime = prioritizedTasks.stream()
                 .anyMatch(existingTask -> isIntersectByTime(existingTask, newTask));
         if (isIntersectByTime) {
-            System.out.println("Создаваемая задача пересекается по времени с уже существующими задачами");
-            return -1;
+            throw new IllegalArgumentException("Создаваемая задача пересекается по времени с уже существующими задачами");
         }
 
         newTask.setId(generateId());
@@ -61,14 +59,13 @@ public class InMemoryTaskManager implements TaskManager {
     public int createSubTask(SubTask newSubTask) {
         if (newSubTask.getStartTime() == null || newSubTask.getEndTime() == null) {
             System.out.println("У создаваемой подзадачи нет startTime или endTime");
-            return -1;
+            throw new IllegalArgumentException("У создаваемой подзадачи нет startTime или endTime");
         }
 
         boolean isIntersectByTime = prioritizedTasks.stream()
                 .anyMatch(existingSubTask -> isIntersectByTime(existingSubTask, newSubTask));
         if (isIntersectByTime) {
-            System.out.println("Создаваемая подзадача пересекается по времени с уже существующими подзадачами");
-            return -1;
+            throw new IllegalArgumentException("Создаваемая подзадача пересекается по времени с уже существующими подзадачами");
         }
 
         int epicId = newSubTask.getEpicId();
@@ -83,8 +80,7 @@ public class InMemoryTaskManager implements TaskManager {
 
             return subTaskId;
         } else {
-            System.out.println("Не найден эпик с epicId: " + epicId);
-            return -1;
+            throw new IllegalArgumentException("Не найден эпик с epicId: " + epicId);
         }
     }
 
@@ -94,13 +90,11 @@ public class InMemoryTaskManager implements TaskManager {
         Task existingTask = tasks.get(updatedTaskId);
 
         if (existingTask == null) {
-            System.out.println("Не найдена задача с taskId: " + updatedTaskId);
-            return false;
+            throw new IllegalArgumentException("Не найдена задача с taskId: " + updatedTaskId);
         }
 
         if (updatedTask.getStartTime() == null || updatedTask.getEndTime() == null) {
-            System.out.println("У обновляемой задачи нет startTime или endTime");
-            return false;
+            throw new IllegalArgumentException("У обновляемой задачи нет startTime или endTime");
         }
 
         boolean isIntersectByTime = prioritizedTasks.stream()
@@ -108,8 +102,7 @@ public class InMemoryTaskManager implements TaskManager {
                 .anyMatch(task -> isIntersectByTime(task, updatedTask));
 
         if (isIntersectByTime) {
-            System.out.println("Обновляемая задача пересекается по времени с уже существующими задачами");
-            return false;
+            throw new IllegalArgumentException("Обновляемая задача пересекается по времени с уже существующими задачами");
         }
 
         tasks.put(updatedTaskId, updatedTask);
@@ -128,8 +121,7 @@ public class InMemoryTaskManager implements TaskManager {
             existingEpic.setDescription(updatedEpic.getDescription());
             return true;
         } else {
-            System.out.println("Не найден эпик с updatedEpicId: " + updatedEpicId);
-            return false;
+            throw new IllegalArgumentException("Не найден эпик с updatedEpicId: " + updatedEpicId);
         }
     }
 
@@ -138,13 +130,11 @@ public class InMemoryTaskManager implements TaskManager {
         int updatedSubTaskId = updatedSubTask.getId();
         SubTask existingSubTask = subTasks.get(updatedSubTaskId);
         if (existingSubTask == null) {
-            System.out.println("Не найдена подзадача с id: " + updatedSubTaskId);
-            return false;
+            throw new IllegalArgumentException("Не найдена подзадача с id: " + updatedSubTaskId);
         }
 
         if (updatedSubTask.getStartTime() == null || updatedSubTask.getEndTime() == null) {
-            System.out.println("У обновляемой подзадачи нет startTime или endTime");
-            return false;
+            throw new IllegalArgumentException("У обновляемой подзадачи нет startTime или endTime");
         }
 
         boolean isIntersectByTime = prioritizedTasks.stream()
@@ -152,21 +142,18 @@ public class InMemoryTaskManager implements TaskManager {
                 .anyMatch(task -> isIntersectByTime(task, updatedSubTask));
 
         if (isIntersectByTime) {
-            System.out.println("Обновляемая подзадача пересекается по времени с уже существующими подзадачами");
-            return false;
+            throw new IllegalArgumentException("Обновляемая подзадача пересекается по времени с уже существующими подзадачами");
         }
 
         int updatedSubTaskEpicId = updatedSubTask.getEpicId();
         Epic existingEpic = epics.get(updatedSubTaskEpicId);
         if (existingEpic == null) {
-            System.out.println("Не найден эпик с таким epicId: " + updatedSubTaskEpicId);
-            return false;
+            throw new IllegalArgumentException("Не найден эпик с таким epicId: " + updatedSubTaskEpicId);
         }
 
         int existingSubTaskEpicId = existingSubTask.getEpicId();
         if (updatedSubTaskEpicId != existingSubTaskEpicId) {
-            System.out.println("epicId новой подзадачи не равен epicId существующей подзадачи");
-            return false;
+            throw new IllegalArgumentException("epicId новой подзадачи не равен epicId существующей подзадачи");
         }
 
         subTasks.put(updatedSubTaskId, updatedSubTask);
@@ -233,8 +220,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteEpic(int epicId) {
         if (!epics.containsKey(epicId)) {
-            System.out.println("Не существует эпика с указанным epicId: " + epicId);
-            return;
+            throw new IllegalArgumentException("Не существует эпика с указанным epicId: " + epicId);
         }
         ArrayList<Integer> subTaskIdList = epics.get(epicId).getSubTaskIdList();
         subTaskIdList.forEach(subTaskId -> {
@@ -249,8 +235,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteSubTask(int subTaskId) {
         SubTask subTask = subTasks.get(subTaskId);
         if (subTask == null) {
-            System.out.println("Не существует подзадачи с указанным subTaskId: " + subTaskId);
-            return;
+            throw new IllegalArgumentException("Не существует подзадачи с указанным subTaskId: " + subTaskId);
         }
         int epicId = subTask.getEpicId();
         Epic epic = epics.get(epicId);
@@ -315,8 +300,7 @@ public class InMemoryTaskManager implements TaskManager {
     public final List<SubTask> getSubTasksByEpic(int epicId) {
         Epic epic = epics.get(epicId);
         if (epic == null) {
-            System.out.println("Не существует эпика с epicId: " + epicId);
-            return null;
+            throw new IllegalArgumentException("Не существует эпика с epicId: " + epicId);
         }
         ArrayList<Integer> subTaskIdList = epic.getSubTaskIdList();
         ArrayList<SubTask> subTasksByEpic = new ArrayList<>();
