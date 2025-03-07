@@ -22,8 +22,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     protected Task task;
     protected Epic epic;
     protected SubTask subTask;
-    protected LocalDateTime startTime;
-    protected Duration duration;
+    private LocalDateTime startTime;
+    private Duration duration;
 
     protected abstract T createTaskManager();
 
