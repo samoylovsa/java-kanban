@@ -29,10 +29,6 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int createTask(Task newTask) {
-        if (newTask.getStartTime() == null || newTask.getEndTime() == null) {
-            throw new IllegalArgumentException("У создаваемой задачи нет startTime или endTime");
-        }
-
         boolean isIntersectByTime = prioritizedTasks.stream()
                 .anyMatch(existingTask -> isIntersectByTime(existingTask, newTask));
         if (isIntersectByTime) {
@@ -41,7 +37,9 @@ public class InMemoryTaskManager implements TaskManager {
 
         newTask.setId(generateId());
         tasks.put(newTask.getId(), newTask);
-        prioritizedTasks.add(newTask);
+        if (newTask.getStartTime() != null && newTask.getEndTime() != null) {
+            prioritizedTasks.add(newTask);
+        }
 
         return newTask.getId();
     }
@@ -57,11 +55,6 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int createSubTask(SubTask newSubTask) {
-        if (newSubTask.getStartTime() == null || newSubTask.getEndTime() == null) {
-            System.out.println("У создаваемой подзадачи нет startTime или endTime");
-            throw new IllegalArgumentException("У создаваемой подзадачи нет startTime или endTime");
-        }
-
         boolean isIntersectByTime = prioritizedTasks.stream()
                 .anyMatch(existingSubTask -> isIntersectByTime(existingSubTask, newSubTask));
         if (isIntersectByTime) {
@@ -74,7 +67,9 @@ public class InMemoryTaskManager implements TaskManager {
             int subTaskId = newSubTask.getId();
             epics.get(epicId).addSubTaskId(subTaskId);
             subTasks.put(subTaskId, newSubTask);
-            prioritizedTasks.add(newSubTask);
+            if (newSubTask.getStartTime() != null && newSubTask.getEndTime() != null) {
+                prioritizedTasks.add(newSubTask);
+            }
             updateEpicStatus(epics.get(epicId));
             updateEpicTime(epics.get(epicId));
 
@@ -87,14 +82,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public boolean updateTask(Task updatedTask) {
         int updatedTaskId = updatedTask.getId();
-        Task existingTask = tasks.get(updatedTaskId);
+        final Task existingTask = tasks.get(updatedTaskId);
 
         if (existingTask == null) {
             throw new IllegalArgumentException("Не найдена задача с taskId: " + updatedTaskId);
-        }
-
-        if (updatedTask.getStartTime() == null || updatedTask.getEndTime() == null) {
-            throw new IllegalArgumentException("У обновляемой задачи нет startTime или endTime");
         }
 
         boolean isIntersectByTime = prioritizedTasks.stream()
@@ -107,7 +98,9 @@ public class InMemoryTaskManager implements TaskManager {
 
         tasks.put(updatedTaskId, updatedTask);
         prioritizedTasks.remove(existingTask);
-        prioritizedTasks.add(updatedTask);
+        if (updatedTask.getStartTime() != null && updatedTask.getEndTime() != null) {
+            prioritizedTasks.add(updatedTask);
+        }
 
         return true;
     }
@@ -128,13 +121,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public boolean updateSubTask(SubTask updatedSubTask) {
         int updatedSubTaskId = updatedSubTask.getId();
-        SubTask existingSubTask = subTasks.get(updatedSubTaskId);
+        final SubTask existingSubTask = subTasks.get(updatedSubTaskId);
         if (existingSubTask == null) {
             throw new IllegalArgumentException("Не найдена подзадача с id: " + updatedSubTaskId);
-        }
-
-        if (updatedSubTask.getStartTime() == null || updatedSubTask.getEndTime() == null) {
-            throw new IllegalArgumentException("У обновляемой подзадачи нет startTime или endTime");
         }
 
         boolean isIntersectByTime = prioritizedTasks.stream()
@@ -158,7 +147,9 @@ public class InMemoryTaskManager implements TaskManager {
 
         subTasks.put(updatedSubTaskId, updatedSubTask);
         prioritizedTasks.remove(existingSubTask);
-        prioritizedTasks.add(updatedSubTask);
+        if (updatedSubTask.getStartTime() != null && updatedSubTask.getEndTime() != null) {
+            prioritizedTasks.add(updatedSubTask);
+        }
         updateEpicStatus(existingEpic);
         updateEpicTime(existingEpic);
 
@@ -224,6 +215,10 @@ public class InMemoryTaskManager implements TaskManager {
         }
         ArrayList<Integer> subTaskIdList = epics.get(epicId).getSubTaskIdList();
         subTaskIdList.forEach(subTaskId -> {
+            SubTask subTask = subTasks.get(subTaskId);
+            if (subTask != null) {
+                prioritizedTasks.remove(subTask);
+            }
             subTasks.remove(subTaskId);
             historyManager.remove(subTaskId);
         });
@@ -267,6 +262,7 @@ public class InMemoryTaskManager implements TaskManager {
         epics.clear();
 
         subTasks.keySet().forEach(historyManager::remove);
+        subTasks.values().forEach(prioritizedTasks::remove);
         subTasks.clear();
     }
 
@@ -274,17 +270,14 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteAllSubTasks() {
         Set<Epic> processedEpics = new HashSet<>();
 
-        subTasks.values().forEach(subTask -> {
+        subTasks.forEach((id, subTask) -> {
             int epicId = subTask.getEpicId();
             Epic epic = epics.get(epicId);
             if (epic != null) {
                 processedEpics.add(epic);
             }
-        });
-
-        subTasks.keySet().forEach(id -> {
             historyManager.remove(id);
-            prioritizedTasks.remove(subTasks.get(id));
+            prioritizedTasks.remove(subTask);
         });
 
         subTasks.clear();
@@ -399,6 +392,10 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime secondStartTime = secondTask.getStartTime();
         LocalDateTime secondEndTime = secondTask.getEndTime();
 
-        return firstStartTime.isBefore(secondEndTime) && secondStartTime.isBefore(firstEndTime);
+        if (firstStartTime == null || firstEndTime == null || secondStartTime == null || secondEndTime == null) {
+            return false;
+        }
+
+        return !firstEndTime.isBefore(secondStartTime) && !secondEndTime.isBefore(firstStartTime);
     }
 }

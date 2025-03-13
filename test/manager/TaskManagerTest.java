@@ -633,132 +633,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void shouldBeAssertWhenTaskCreateWithNullStartTime() {
-        Task taskWithNullTime = new Task("Name", "Description", Status.NEW, null, duration);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.createTask(taskWithNullTime);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenTaskCreateWithNullDuration() {
-        Task taskWithNullDuration = new Task("Name", "Description", Status.NEW, startTime, null);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.createTask(taskWithNullDuration);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenTasksIsIntersectByTimeWhileCreate() {
-        Task firstTask = new Task("Name1", "Description1", Status.NEW, startTime, duration);
-        Task secondTask = new Task("Name2", "Description2", Status.NEW, startTime, duration);
-        taskManager.createTask(firstTask);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.createTask(secondTask);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenSubTaskCreateWithNullStartTime() {
-        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
-        SubTask subTaskWithNullTime = new SubTask("Name", "Description", Status.NEW, epicId,null, duration);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.createSubTask(subTaskWithNullTime);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenSubTaskCreateWithNullDuration() {
-        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
-        SubTask subTaskWithNullDuration = new SubTask("Name", "Description", Status.NEW, epicId,startTime, null);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.createSubTask(subTaskWithNullDuration);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenSubTasksIsIntersectByTimeWhileCreate() {
-        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
-        SubTask firstSubTask = new SubTask("Name1", "Description1", Status.NEW, epicId, startTime, duration);
-        SubTask secondSubTask = new SubTask("Name2", "Description2", Status.NEW, epicId, startTime, duration);
-        taskManager.createSubTask(firstSubTask);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.createSubTask(secondSubTask);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenTaskUpdateWithNullStartTime() {
-        Task task = new Task("Name", "Description", Status.NEW, startTime, duration);
-        taskManager.createTask(task);
-        task.setStartTime(null);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.updateTask(task);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenTaskUpdateWithNullDuration() {
-        Task task = new Task("Name", "Description", Status.NEW, startTime, duration);
-        taskManager.createTask(task);
-        task.setDuration(null);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.updateTask(task);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenTasksIsIntersectByTimeWhileUpdate() {
-        Task firstTask = new Task("Name", "Description", Status.NEW, startTime, duration);
-        Task secondTask = new Task("Name", "Description", Status.NEW, startTime.plusMinutes(120), duration);
-        taskManager.createTask(firstTask);
-        taskManager.createTask(secondTask);
-
-        firstTask.setStartTime(startTime.plusMinutes(120));
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.updateTask(firstTask);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenSubTaskUpdateWithNullStartTime() {
-        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
-        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
-        taskManager.createTask(subTask);
-        subTask.setStartTime(null);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.updateSubTask(subTask);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenSubTaskUpdateWithNullDuration() {
-        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
-        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
-        taskManager.createSubTask(subTask);
-        subTask.setDuration(null);
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.updateSubTask(subTask);
-        });
-    }
-
-    @Test
-    void shouldBeAssertWhenSubTasksIsIntersectByTimeWhileUpdate() {
-        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
-        SubTask firstSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
-        SubTask secondSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime.plusMinutes(120), duration);
-        taskManager.createSubTask(firstSubTask);
-        taskManager.createSubTask(secondSubTask);
-
-        firstSubTask.setStartTime(startTime.plusMinutes(120));
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.updateSubTask(firstSubTask);
-        });
-    }
-
-    @Test
     void shouldReturnPrioritizedTasksAndSubTasksAfterCreate() {
         LocalDateTime firstStartTime = startTime;
         LocalDateTime secondStartTime = startTime.plusMinutes(120);
@@ -856,5 +730,400 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         assertEquals(firstTaskFromManager, prioritizedTasksAndSubTasks.get(3),
                 "Последняя задача в списке является задачей с самым поздним startTime после обновления");
+    }
+
+    @Test
+    void prioritizedTasksShouldBeEmptyAfterCreatingTaskWithNullStartTime() {
+        Task task = new Task("Name", "Description", Status.NEW, null, duration);
+        int taskId = taskManager.createTask(task);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertTrue(prioritizedTasks.isEmpty(), "Список приоритетных задач должен быть пуст");
+    }
+
+    @Test
+    void prioritizedTasksShouldBeEmptyAfterCreatingTaskWithNullDurationTime() {
+        Task task = new Task("Name", "Description", Status.NEW, startTime, null);
+        int taskId = taskManager.createTask(task);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertTrue(prioritizedTasks.isEmpty(), "Список приоритетных задач должен быть пуст");
+    }
+
+    @Test
+    void prioritizedTasksShouldContainTaskAfterUpdateFromNullStartTime() {
+        Task task = new Task("Name", "Description", Status.NEW, null, duration);
+        int taskId = taskManager.createTask(task);
+        Task updatedTask = new Task("Name", "Description", Status.NEW, startTime, duration);
+        updatedTask.setId(1);
+        taskManager.updateTask(updatedTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertFalse(prioritizedTasks.isEmpty(), "Список приоритетных задач НЕ должен быть пуст");
+        assertEquals(1, prioritizedTasks.size(), "В списке приоритетных задач только один объект");
+        assertEquals(updatedTask, prioritizedTasks.getFirst(), "Задачи из списка приоритетных задач " +
+                "соответствует обновлённой задаче");
+    }
+
+    @Test
+    void prioritizedTasksShouldContainTaskAfterUpdateFromNullDuration() {
+        Task task = new Task("Name", "Description", Status.NEW, startTime, null);
+        int taskId = taskManager.createTask(task);
+        Task updatedTask = new Task("Name", "Description", Status.NEW, startTime, duration);
+        updatedTask.setId(1);
+        taskManager.updateTask(updatedTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertFalse(prioritizedTasks.isEmpty(), "Список приоритетных задач НЕ должен быть пуст");
+        assertEquals(1, prioritizedTasks.size(), "В списке приоритетных задач только один объект");
+        assertEquals(updatedTask, prioritizedTasks.getFirst(), "Задачи из списка приоритетных задач " +
+                "соответствует обновлённой задаче");
+    }
+
+    @Test
+    void prioritizedTasksShouldBeEmptyAfterUpdateTaskOnNullStartTime() {
+        Task task = new Task("Name", "Description", Status.NEW, startTime, duration);
+        int taskId = taskManager.createTask(task);
+        Task updatedTask = new Task("Name", "Description", Status.NEW, null, duration);
+        updatedTask.setId(1);
+        taskManager.updateTask(updatedTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertTrue(prioritizedTasks.isEmpty(), "Список приоритетных задач должен быть пуст");
+    }
+
+    @Test
+    void prioritizedTasksShouldBeEmptyAfterUpdateTaskOnNullDuration() {
+        Task task = new Task("Name", "Description", Status.NEW, startTime, duration);
+        int taskId = taskManager.createTask(task);
+        Task updatedTask = new Task("Name", "Description", Status.NEW, startTime, null);
+        updatedTask.setId(1);
+        taskManager.updateTask(updatedTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertTrue(prioritizedTasks.isEmpty(), "Список приоритетных задач должен быть пуст");
+    }
+
+    @Test
+    void prioritizedTasksShouldBeEmptyAfterCreatingSubTaskWithNullStartTime() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, null, duration);
+        int subTaskId = taskManager.createSubTask(subTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertTrue(prioritizedTasks.isEmpty(), "Список приоритетных задач должен быть пуст");
+    }
+
+    @Test
+    void prioritizedTasksShouldBeEmptyAfterCreatingSubTaskWithNullDuration() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, null);
+        int subTaskId = taskManager.createSubTask(subTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertTrue(prioritizedTasks.isEmpty(), "Список приоритетных задач должен быть пуст");
+    }
+
+    @Test
+    void prioritizedTasksShouldContainSubTaskAfterUpdateFromNullStartTime() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, null, duration);
+        int subTaskId = taskManager.createSubTask(subTask);
+        SubTask updatedSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        updatedSubTask.setId(2);
+        taskManager.updateSubTask(updatedSubTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertFalse(prioritizedTasks.isEmpty(), "Список приоритетных задач НЕ должен быть пуст");
+        assertEquals(1, prioritizedTasks.size(), "В списке приоритетных задач только один объект");
+        assertEquals(updatedSubTask, prioritizedTasks.getFirst(), "Задачи из списка приоритетных задач " +
+                "соответствует обновлённой задаче");
+    }
+
+    @Test
+    void prioritizedTasksShouldContainSubTaskAfterUpdateFromNullDuration() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, null);
+        int subTaskId = taskManager.createSubTask(subTask);
+        SubTask updatedSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        updatedSubTask.setId(2);
+        taskManager.updateSubTask(updatedSubTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertFalse(prioritizedTasks.isEmpty(), "Список приоритетных задач НЕ должен быть пуст");
+        assertEquals(1, prioritizedTasks.size(), "В списке приоритетных задач только один объект");
+        assertEquals(updatedSubTask, prioritizedTasks.getFirst(), "Задачи из списка приоритетных задач " +
+                "соответствует обновлённой задаче");
+    }
+
+    @Test
+    void prioritizedTasksShouldBeEmptyAfterUpdateSubTaskOnNullStartTime() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        int subTaskId = taskManager.createSubTask(subTask);
+        SubTask updatedSubTask = new SubTask("Name", "Description", Status.NEW, epicId, null, duration);
+        updatedSubTask.setId(2);
+        taskManager.updateSubTask(updatedSubTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertTrue(prioritizedTasks.isEmpty(), "Список приоритетных задач должен быть пуст");
+    }
+
+    @Test
+    void prioritizedTasksShouldBeEmptyAfterUpdateSubTaskOnNullDuration() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        int subTaskId = taskManager.createSubTask(subTask);
+        SubTask updatedSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, null);
+        updatedSubTask.setId(2);
+        taskManager.updateSubTask(updatedSubTask);
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        assertTrue(prioritizedTasks.isEmpty(), "Список приоритетных задач должен быть пуст");
+    }
+
+    @Test
+    void epicTimeShouldBeEmptyAfterCreation() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        Epic epic = taskManager.getEpic(epicId);
+        LocalDateTime epicTime = epic.getEndTime();
+
+        assertNull(epicTime, "Время эпика после создания должно быть null");
+    }
+
+    @Test
+    void epicTimeShouldBeEqualOfOneSubTaskTimeAfterCreation() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask subTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        int subTaskId = taskManager.createSubTask(subTask);
+        SubTask subTaskFromManager = taskManager.getSubTask(subTaskId);
+        Epic epic = taskManager.getEpic(epicId);
+
+        LocalDateTime expectedStartTime = subTaskFromManager.getStartTime();
+        LocalDateTime expectedEndTime = subTaskFromManager.getEndTime();
+        Duration expectedDuration = Duration.between(expectedStartTime, expectedEndTime);
+
+        LocalDateTime actualStartTime = epic.getStartTime();
+        LocalDateTime actualEndTime = epic.getEndTime();
+        Duration actualDuration = epic.getDuration();
+
+        assertEquals(expectedStartTime, actualStartTime, "startTime эпика должно соответствовать startTime " +
+                "самой ранней задачи");
+        assertEquals(expectedEndTime, actualEndTime, "endTime эпика должно соответствовать endTime задачи");
+        assertEquals(expectedDuration, actualDuration, "Duration эпика должно соответствовать времени между " +
+                "startTime и endTime");
+    }
+
+    @Test
+    void epicTimeShouldBeEqualOfAnySubTaskTimeAfterCreation() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask firstSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        SubTask secondSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                startTime.plusMinutes(120), duration);
+        int firstSubTaskId = taskManager.createSubTask(firstSubTask);
+        int secondSubTaskId = taskManager.createSubTask(secondSubTask);
+        SubTask firstSubTaskFromManager = taskManager.getSubTask(firstSubTaskId);
+        SubTask secondSubTaskFromManager = taskManager.getSubTask(secondSubTaskId);
+        Epic epic = taskManager.getEpic(epicId);
+        LocalDateTime firstSubTaskStartTime = firstSubTaskFromManager.getStartTime();
+        LocalDateTime firstSubTaskEndTime = firstSubTaskFromManager.getEndTime();
+        LocalDateTime secondSubTaskStartTime = secondSubTaskFromManager.getStartTime();
+        LocalDateTime secondSubTaskEndTime = secondSubTaskFromManager.getEndTime();
+
+        LocalDateTime expectedStartTime = firstSubTaskStartTime;
+        LocalDateTime expectedEndTime = secondSubTaskEndTime;
+        Duration expectedDuration = Duration.between(firstSubTaskStartTime, firstSubTaskEndTime)
+                .plus(Duration.between(secondSubTaskStartTime, secondSubTaskEndTime));
+
+        LocalDateTime actualStartTime = epic.getStartTime();
+        LocalDateTime actualEndTime = epic.getEndTime();
+        Duration actualDuration = epic.getDuration();
+
+        assertEquals(expectedStartTime, actualStartTime, "startTime эпика должно соответствовать startTime " +
+                "самой ранней задачи");
+        assertEquals(expectedEndTime, actualEndTime, "endTime эпика должно соответствовать самому позднему endTime задачи");
+        assertEquals(expectedDuration, actualDuration, "Duration эпика должно соответствовать сумме " +
+                "startTime и endTime всех подзадач");
+    }
+
+    @Test
+    void epicTimeShouldBeEqualOfAnySubTaskTimeAfterUpdate() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask firstSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        SubTask secondSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                startTime.plusMinutes(120), duration);
+        int firstSubTaskId = taskManager.createSubTask(firstSubTask);
+        int secondSubTaskId = taskManager.createSubTask(secondSubTask);
+        SubTask updatedFirstSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                startTime.plusMinutes(240), duration.plusMinutes(30));
+        updatedFirstSubTask.setId(2);
+        SubTask updatedSecondSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                startTime.plusMinutes(360), duration.plusMinutes(90));
+        updatedSecondSubTask.setId(3);
+        taskManager.updateSubTask(updatedFirstSubTask);
+        taskManager.updateSubTask(updatedSecondSubTask);
+
+        SubTask firstSubTaskFromManager = taskManager.getSubTask(firstSubTaskId);
+        SubTask secondSubTaskFromManager = taskManager.getSubTask(secondSubTaskId);
+        Epic epic = taskManager.getEpic(epicId);
+
+        LocalDateTime firstSubTaskStartTime = firstSubTaskFromManager.getStartTime();
+        LocalDateTime firstSubTaskEndTime = firstSubTaskFromManager.getEndTime();
+        LocalDateTime secondSubTaskStartTime = secondSubTaskFromManager.getStartTime();
+        LocalDateTime secondSubTaskEndTime = secondSubTaskFromManager.getEndTime();
+
+        LocalDateTime expectedStartTime = firstSubTaskStartTime;
+        LocalDateTime expectedEndTime = secondSubTaskEndTime;
+        Duration expectedDuration = Duration.between(firstSubTaskStartTime, firstSubTaskEndTime)
+                .plus(Duration.between(secondSubTaskStartTime, secondSubTaskEndTime));
+
+        LocalDateTime actualStartTime = epic.getStartTime();
+        LocalDateTime actualEndTime = epic.getEndTime();
+        Duration actualDuration = epic.getDuration();
+
+        assertEquals(expectedStartTime, actualStartTime, "startTime эпика должно соответствовать startTime " +
+                "самой ранней задачи");
+        assertEquals(expectedEndTime, actualEndTime, "endTime эпика должно соответствовать самому позднему endTime задачи");
+        assertEquals(expectedDuration, actualDuration, "Duration эпика должно соответствовать сумме " +
+                "startTime и endTime всех подзадач");
+    }
+
+    @Test
+    void epicTimeShouldBeEmptyAfterDeletionAllSubTasks() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask firstSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        SubTask secondSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                startTime.plusMinutes(120), duration);
+        int firstSubTaskId = taskManager.createSubTask(firstSubTask);
+        int secondSubTaskId = taskManager.createSubTask(secondSubTask);
+
+        taskManager.deleteAllSubTasks();
+
+        Epic epic = taskManager.getEpic(epicId);
+        LocalDateTime epicTime = epic.getEndTime();
+
+        assertNull(epicTime, "Время эпика после удаления всех подзадач должно быть null");
+    }
+
+    @Test
+    void epicTimeShouldBeEmptyIfContainSubTasksWithNullTimeOrDuration() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask firstSubTask = new SubTask("Name", "Description", Status.NEW, epicId, null, duration);
+        SubTask secondSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                startTime.plusMinutes(120), null);
+        taskManager.createSubTask(firstSubTask);
+        taskManager.createSubTask(secondSubTask);
+
+        Epic epic = taskManager.getEpic(epicId);
+        LocalDateTime epicTime = epic.getEndTime();
+
+        assertNull(epicTime, "Время эпика должно быть null если эпик содержит подзадачи с пустым startTime или duration");
+    }
+
+    @Test
+    void epicTimeShouldBeEmptyAfterUpdateSubTasksToNullTimeOrDuration() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask firstSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        SubTask secondSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                startTime.plusMinutes(120), duration);
+        taskManager.createSubTask(firstSubTask);
+        taskManager.createSubTask(secondSubTask);
+
+        SubTask updatedFirstSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                null, duration);
+        updatedFirstSubTask.setId(2);
+        SubTask updatedSecondSubTask = new SubTask("Name", "Description", Status.NEW, epicId,
+                startTime.plusMinutes(120), null);
+        updatedSecondSubTask.setId(3);
+        taskManager.updateSubTask(updatedFirstSubTask);
+        taskManager.updateSubTask(updatedSecondSubTask);
+
+        Epic epic = taskManager.getEpic(epicId);
+        LocalDateTime epicTime = epic.getEndTime();
+
+        assertNull(epicTime, "Время эпика должно быть null если эпик содержит подзадачи с пустым startTime или duration");
+    }
+
+    @Test
+    void shouldBeAssertWhenTasksIsIntersectByTimeWhileCreate() {
+        Task firstTask = new Task("Name1", "Description1", Status.NEW, startTime, duration);
+        Task secondTask = new Task("Name2", "Description2", Status.NEW, startTime, duration);
+        taskManager.createTask(firstTask);
+        assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.createTask(secondTask);
+        });
+    }
+
+    @Test
+    void shouldBeAssertWhenSubTasksIsIntersectByTimeWhileCreate() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask firstSubTask = new SubTask("Name1", "Description1", Status.NEW, epicId, startTime, duration);
+        SubTask secondSubTask = new SubTask("Name2", "Description2", Status.NEW, epicId, startTime, duration);
+        taskManager.createSubTask(firstSubTask);
+        assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.createSubTask(secondSubTask);
+        });
+    }
+
+    @Test
+    void shouldBeAssertWhenTasksIsIntersectByTimeWhileUpdate() {
+        Task firstTask = new Task("Name", "Description", Status.NEW, startTime, duration);
+        Task secondTask = new Task("Name", "Description", Status.NEW, startTime.plusMinutes(120), duration);
+        taskManager.createTask(firstTask);
+        taskManager.createTask(secondTask);
+
+        firstTask.setStartTime(startTime.plusMinutes(120));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.updateTask(firstTask);
+        });
+    }
+
+    @Test
+    void shouldBeAssertWhenSubTasksIsIntersectByTimeWhileUpdate() {
+        int epicId = taskManager.createEpic(new Epic("Name", "Description"));
+        SubTask firstSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime, duration);
+        SubTask secondSubTask = new SubTask("Name", "Description", Status.NEW, epicId, startTime.plusMinutes(120), duration);
+        taskManager.createSubTask(firstSubTask);
+        taskManager.createSubTask(secondSubTask);
+
+        firstSubTask.setStartTime(startTime.plusMinutes(120));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.updateSubTask(firstSubTask);
+        });
+    }
+
+    @Test
+    void shouldBeAssertWhenFirstTaskStartsBeforeSecondPartialIntersection() {
+        Task firstTask = new Task("Name", "Description", Status.NEW, startTime, duration);
+        Task secondTask = new Task("Name", "Description", Status.NEW, startTime.plusMinutes(30), duration);
+        taskManager.createTask(firstTask);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.createTask(secondTask);
+        });
+    }
+
+    @Test
+    void shouldBeAssertWhenSecondTaskStartsBeforeFirstPartialIntersection() {
+        Task firstTask = new Task("First Task", "Description", Status.NEW, startTime.plusMinutes(30), duration);
+        Task secondTask = new Task("Second Task", "Description", Status.NEW, startTime, duration);
+        taskManager.createTask(firstTask);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.createTask(secondTask);
+        });
+    }
+
+    @Test
+    void shouldBeAssertWhenOneTaskIsCompletelyInsideAnother() {
+        Task firstTask = new Task("First Task", "Description", Status.NEW, startTime, duration);
+        Task secondTask = new Task("Second Task", "Description", Status.NEW, startTime.plusMinutes(10), Duration.ofMinutes(10));
+        taskManager.createTask(firstTask);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.createTask(secondTask);
+        });
     }
 }
