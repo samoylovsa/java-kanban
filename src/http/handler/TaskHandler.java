@@ -7,8 +7,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import exceptions.EntityIntersectionException;
 import exceptions.EntityNotFoundException;
-import http.model.ErrorMessage;
-import http.validator.JsonValidator;
+import http.utils.JsonValidator;
 import manager.TaskManager;
 import tasks.Task;
 
@@ -18,6 +17,8 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 public class TaskHandler extends BaseHttpHandler implements HttpHandler {
+
+    private static final String PATH_NAME = "tasks";
 
     public TaskHandler(TaskManager taskManager) {
         super(taskManager);
@@ -36,16 +37,16 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
 
         switch (requestMethod) {
             case "GET":
-                handleGetRequest(exchange, pathParts, "tasks");
+                handleGetRequest(exchange, pathParts, PATH_NAME);
                 break;
             case "POST":
-                handlePostRequest(exchange, pathParts, "tasks", requestBody);
+                handlePostRequest(exchange, pathParts, PATH_NAME, requestBody);
                 break;
             case "DELETE":
-                handleDeleteRequest(exchange, pathParts, "tasks");
+                handleDeleteRequest(exchange, pathParts, PATH_NAME);
                 break;
             default:
-                handleError(exchange, 405, "Метод не поддерживается");
+                sendErrorResponse(exchange, 405, "Метод не поддерживается");
         }
     }
 
@@ -61,7 +62,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                 sendResponse(exchange, 200, responseBody);
             }
         } else {
-            handleError(exchange, 400, "Ошибка в запросе");
+            sendErrorResponse(exchange, 400, "Ошибка в запросе");
         }
     }
 
@@ -77,7 +78,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                 }
             }
         } else {
-            handleError(exchange, 400, "Некорректный запрос");
+            sendErrorResponse(exchange, 400, "Некорректный запрос");
         }
     }
 
@@ -89,7 +90,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                 sendResponse(exchange, 201, "{}");
             }
         } else {
-            handleError(exchange, 400, "Некорректный запрос");
+            sendErrorResponse(exchange, 400, "Некорректный запрос");
         }
     }
 
@@ -98,9 +99,9 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
             int taskId = Integer.parseInt(pathParts[2]);
             return taskManager.getTask(taskId);
         } catch (NumberFormatException e) {
-            handleError(exchange, 400, "Некорректный запрос: " + e.getMessage());
+            sendErrorResponse(exchange, 400, "Некорректный запрос: " + e.getMessage());
         } catch (EntityNotFoundException e) {
-            handleError(exchange, 404, e.getMessage());
+            sendErrorResponse(exchange, 404, e.getMessage());
         }
         return null;
     }
@@ -108,16 +109,16 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
     private Task parseTaskFromJson(HttpExchange exchange, String requestBody) throws IOException {
         try {
             JsonElement jsonElement = JsonParser.parseString(requestBody);
-            boolean isRequestBodyValid = JsonValidator.isJsonValid(jsonElement);
+            boolean isRequestBodyValid = JsonValidator.isTaskJsonValid(jsonElement);
             if (!isRequestBodyValid) {
-                handleError(exchange, 400, "Некорректное тело запроса");
+                sendErrorResponse(exchange, 400, "Некорректное тело запроса");
                 return null;
             }
             return gson.fromJson(jsonElement, Task.class);
         } catch (JsonSyntaxException e) {
-            handleError(exchange, 400, "Некорректное тело запроса: " + e.getMessage());
+            sendErrorResponse(exchange, 400, "Некорректное тело запроса: " + e.getMessage());
         } catch (DateTimeParseException e) {
-            handleError(exchange, 400, "Некорректный формат даты: " + e.getMessage());
+            sendErrorResponse(exchange, 400, "Некорректный формат даты: " + e.getMessage());
         }
         return null;
     }
@@ -129,7 +130,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
             String responseBody = gson.toJson(taskFromManager);
             sendResponse(exchange, 200, responseBody);
         } catch (EntityIntersectionException e) {
-            handleError(exchange, 406, e.getMessage());
+            sendErrorResponse(exchange, 406, e.getMessage());
         }
     }
 
@@ -140,17 +141,9 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                 sendResponse(exchange, 201, "{}");
             }
         } catch (EntityNotFoundException e) {
-            handleError(exchange, 404, e.getMessage());
+            sendErrorResponse(exchange, 404, e.getMessage());
         } catch (EntityIntersectionException e) {
-            handleError(exchange, 406, e.getMessage());
+            sendErrorResponse(exchange, 406, e.getMessage());
         }
-    }
-
-    private boolean isPathValid(String[] pathParts, String pathName, int expectedLength) {
-        return pathParts.length == expectedLength && pathParts[1].equals(pathName);
-    }
-
-    private void handleError(HttpExchange exchange, int statusCode, String message) throws IOException {
-        sendResponse(exchange, statusCode, gson.toJson(new ErrorMessage(message)));
     }
 }

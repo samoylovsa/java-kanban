@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import http.adapter.DurationAdapter;
 import http.adapter.LocalDateTimeAdapter;
+import http.model.ErrorMessage;
 import manager.TaskManager;
 
 import java.io.IOException;
@@ -32,5 +33,13 @@ public class BaseHttpHandler {
         exchange.getResponseBody().write(response);
         exchange.close();
         System.out.println("Отправлен ответ " + responseCode + " " + responseText);
+    }
+
+    protected boolean isPathValid(String[] pathParts, String pathName, int expectedLength) {
+        return pathParts.length == expectedLength && pathParts[1].equals(pathName);
+    }
+
+    protected void sendErrorResponse(HttpExchange exchange, int responseCode, String responseText) throws IOException {
+        sendResponse(exchange, responseCode, gson.toJson(new ErrorMessage(responseText)));
     }
 }
