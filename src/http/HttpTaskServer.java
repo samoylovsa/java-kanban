@@ -14,7 +14,7 @@ public class HttpTaskServer {
     private final HttpServer httpServer;
 
     public HttpTaskServer(TaskManager taskManager) throws IOException {
-        httpServer = HttpServer.create(new InetSocketAddress(PORT), 0);
+        httpServer = HttpServer.create(new InetSocketAddress("localhost", PORT), 0);
         httpServer.createContext("/tasks", new TaskHandler(taskManager));
         httpServer.createContext("/subtasks", new SubTaskHandler(taskManager));
         httpServer.createContext("/epics", new EpicHandler(taskManager));
@@ -37,6 +37,5 @@ public class HttpTaskServer {
         HttpTaskServer taskServer = new HttpTaskServer(taskManager);
         taskServer.start();
         System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
-        taskServer.stop(180);
     }
 }
