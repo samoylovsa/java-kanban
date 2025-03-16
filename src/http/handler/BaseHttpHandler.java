@@ -23,6 +23,7 @@ public class BaseHttpHandler {
         gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
                 .registerTypeAdapter(Duration.class, new DurationAdapter())
+                .serializeNulls()
                 .create();
     }
 
