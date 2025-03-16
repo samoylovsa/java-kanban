@@ -309,14 +309,6 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public final void printAllTasks() {
-        Stream.concat(
-                Stream.concat(tasks.values().stream(), epics.values().stream()),
-                subTasks.values().stream()
-        ).forEach(System.out::println);
-    }
-
-    @Override
     public final List<Task> getHistory() {
         return historyManager.getHistory();
     }

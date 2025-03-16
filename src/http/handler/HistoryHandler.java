@@ -8,6 +8,8 @@ import java.io.IOException;
 
 public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
 
+    private static final String PATH_NAME = "history";
+
     public HistoryHandler(TaskManager taskManager) {
         super(taskManager);
     }
@@ -16,4 +18,5 @@ public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
 
     }
+
 }
