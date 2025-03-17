@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
 import tasks.Status;
+import tasks.SubTask;
+import tasks.Task;
 
 import java.io.IOException;
 import java.net.URI;
@@ -186,5 +188,43 @@ public class EpicHandlerPositiveTest {
 
         assertEquals(201, response.statusCode(), "Код ответа должен быть 201");
         assertTrue(expectedEpics.isEmpty(), "Список эпиков в менеджере пустой после удаления");
+    }
+
+    @Test
+    void getSubTasksByEpicIdTest() throws IOException, InterruptedException {
+        LocalDateTime dateTime = LocalDateTime.parse("2025-03-16T14:30:00.000");
+        Epic task = new Epic("Epic Name", "Epic Description");
+        int epicId = taskManager.createEpic(task);
+        SubTask firstSubTask = new SubTask("SubTask Name", "SubTask Description", Status.IN_PROGRESS, epicId, dateTime, Duration.ofHours(1));
+        SubTask secondSubTask = new SubTask("SubTask Name", "SubTask Description", Status.IN_PROGRESS, epicId, dateTime.plusHours(3), Duration.ofHours(1));
+        taskManager.createSubTask(firstSubTask);
+        taskManager.createSubTask(secondSubTask);
+        URI urlForGettingSubTasks = url.resolve("/epics/" + taskManager.getEpics().getFirst().getId() + "/subtasks");
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(urlForGettingSubTasks)
+                .version(HttpClient.Version.HTTP_1_1)
+                .header("Accept", "*/*")
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, handler);
+
+        String expectedResponseBody = "[{\"epicId\":1,\"id\":2,\"name\":\"SubTask Name\",\"description\":\"SubTask Description\"," +
+                "\"status\":\"IN_PROGRESS\",\"startTime\":\"2025-03-16T14:30\",\"duration\":\"PT1H\"}," +
+                "{\"epicId\":1,\"id\":3,\"name\":\"SubTask Name\",\"description\":\"SubTask Description\"," +
+                "\"status\":\"IN_PROGRESS\",\"startTime\":\"2025-03-16T17:30\",\"duration\":\"PT1H\"}]";
+        String actualResponseBody = response.body();
+        List<SubTask> expectedSubTasksByEpicId = taskManager.getSubTasksByEpic(epicId);
+        List<SubTask> actualSubTasksByEpicId = gson.fromJson(
+                response.body(),
+                new TypeToken<List<SubTask>>() {
+                }.getType()
+        );
+
+        assertEquals(200, response.statusCode(), "Код ответа должен быть 200");
+        assertEquals(expectedResponseBody, actualResponseBody, "Тело ответа должно соответствовать структуре и данным хранящимся в менеджере");
+        assertEquals(expectedSubTasksByEpicId, actualSubTasksByEpicId, "Список подзадач в менеджере должен соответствовать списку в ответе");
     }
 }
