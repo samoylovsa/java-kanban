@@ -20,6 +20,11 @@ public class LocalDateTimeAdapter extends TypeAdapter<LocalDateTime> {
 
     @Override
     public LocalDateTime read(JsonReader jsonReader) throws IOException {
-        return LocalDateTime.parse(jsonReader.nextString());
+        if (jsonReader.peek() == com.google.gson.stream.JsonToken.NULL) {
+            jsonReader.nextNull();
+            return null;
+        }
+        String dateTimeString = jsonReader.nextString();
+        return LocalDateTime.parse(dateTimeString);
     }
 }
