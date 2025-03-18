@@ -119,8 +119,6 @@ public class SubTaskHandler extends BaseHttpHandler implements HttpHandler {
             sendResponse(exchange, 200, responseBody);
         } catch (EntityIntersectionException e) {
             sendErrorResponse(exchange, 406, e.getMessage());
-        } catch (EntityNotFoundException e) {
-            sendErrorResponse(exchange, 404, e.getMessage());
         }
     }
 

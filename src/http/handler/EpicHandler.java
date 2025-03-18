@@ -140,14 +140,10 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
     }
 
     private void createEpic(HttpExchange exchange, Epic epic) throws IOException {
-        try {
-            int epicId = taskManager.createEpic(epic);
-            Epic epicFromManager = findEpicInManager(epicId);
-            String responseBody = gson.toJson(epicFromManager);
-            sendResponse(exchange, 200, responseBody);
-        } catch (EntityNotFoundException e) {
-            sendErrorResponse(exchange, 404, e.getMessage());
-        }
+        int epicId = taskManager.createEpic(epic);
+        Epic epicFromManager = findEpicInManager(epicId);
+        String responseBody = gson.toJson(epicFromManager);
+        sendResponse(exchange, 200, responseBody);
     }
 
     private void updateEpic(HttpExchange exchange, Epic epic) throws IOException {
