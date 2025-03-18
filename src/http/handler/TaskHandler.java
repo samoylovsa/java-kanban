@@ -126,7 +126,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
     private void createTask(HttpExchange exchange, Task task) throws IOException {
         try {
             int taskId = taskManager.createTask(task);
-            Task taskFromManager = taskManager.getTask(taskId);
+            Task taskFromManager = findTaskInManager(taskId);
             String responseBody = gson.toJson(taskFromManager);
             sendResponse(exchange, 200, responseBody);
         } catch (EntityIntersectionException e) {
@@ -145,5 +145,15 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
         } catch (EntityIntersectionException e) {
             sendErrorResponse(exchange, 406, e.getMessage());
         }
+    }
+
+    private Task findTaskInManager(int taskId) {
+        List<Task> tasks = taskManager.getTasks();
+        for (Task task : tasks) {
+            if (task.getId() == taskId) {
+                return task;
+            }
+        }
+        throw new EntityNotFoundException("Задача с Id " + taskId + " не найдена");
     }
 }
