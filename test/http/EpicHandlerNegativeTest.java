@@ -9,8 +9,6 @@ import manager.TaskManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import tasks.Status;
-import tasks.Task;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,7 +20,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TaskHandlerNegativeTest {
+public class EpicHandlerNegativeTest {
 
     TaskManager taskManager;
     HttpTaskServer httpTaskServer;
@@ -41,7 +39,7 @@ public class TaskHandlerNegativeTest {
         }
         httpTaskServer.start();
         httpClient = HttpClient.newHttpClient();
-        url = URI.create("http://localhost:8080/tasks");
+        url = URI.create("http://localhost:8080/epics");
         handler = HttpResponse.BodyHandlers.ofString();
         gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
@@ -56,9 +54,8 @@ public class TaskHandlerNegativeTest {
     }
 
     @Test
-    void createIntersectedTaskTest() throws IOException, InterruptedException {
-        String requestBody = "{\"name\":\"Task Name\",\"description\":\"Task Description\",\"status\":\"NEW\"," +
-                "\"startTime\":\"2025-03-16T14:30\",\"duration\":\"PT1H\"}";
+    void createNewEpicWithBadRequestTest() throws IOException, InterruptedException {
+        String requestBody = "{\"name\": \"Epic Name\"}";
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .uri(url)
@@ -66,24 +63,18 @@ public class TaskHandlerNegativeTest {
                 .header("Accept", "*/*")
                 .header("Content-Type", "application/json")
                 .build();
-        httpClient.send(request, handler);
 
         HttpResponse<String> response = httpClient.send(request, handler);
 
-        String expectedResponseBody = "{\"errorMessage\":\"Создаваемая задача пересекается по времени с уже существующими задачами\"}";
+        String expectedResponseBody = "{\"errorMessage\":\"Некорректное тело запроса\"}";
 
-        assertEquals(406, response.statusCode(), "Код ответа должен быть 406");
-        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о пересечении задач");
+        assertEquals(400, response.statusCode(), "Код ответа должен быть 400");
+        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о некорректном теле запроса");
     }
 
     @Test
-    void updateNotFoundTaskTest() throws IOException, InterruptedException {
-        LocalDateTime dateTime = LocalDateTime.parse("2025-03-16T14:30:00.000");
-        Task task = new Task("Task Name", "Task Description", Status.NEW, dateTime, Duration.ofHours(1));
-        taskManager.createTask(task);
-
-        String requestBody = "{\"id\":100,\"name\":\"Updated Task Name\",\"description\":\"Updated Task Description\",\"status\":\"DONE\"," +
-                "\"startTime\":\"2025-04-20T14:30\",\"duration\":\"PT1H30M\"}";
+    void updateNotFoundEpicTest() throws IOException, InterruptedException {
+        String requestBody = "{\"id\": \"12333\", \"name\": \"Updated Epic Name\", \"description\": \"Updated Epic Description\"}";
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .uri(url)
@@ -94,14 +85,14 @@ public class TaskHandlerNegativeTest {
 
         HttpResponse<String> response = httpClient.send(request, handler);
 
-        String expectedResponseBody = "{\"errorMessage\":\"Не найдена задача с taskId: 100\"}";
+        String expectedResponseBody = "{\"errorMessage\":\"Не найден эпик с updatedEpicId: 12333\"}";
 
         assertEquals(404, response.statusCode(), "Код ответа должен быть 404");
-        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о том что задача не найдена");
+        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о том что эпик не найден");
     }
 
     @Test
-    void getEmptyTasksListTest() throws IOException, InterruptedException {
+    void getEmptyEpicsListTest() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(url)
@@ -119,12 +110,12 @@ public class TaskHandlerNegativeTest {
     }
 
     @Test
-    void getNotFoundTaskByIdTest() throws IOException, InterruptedException {
-        URI urlForGettingTask = url.resolve("/tasks/" + 12344);
+    void getNotFoundEpicByIdTest() throws IOException, InterruptedException {
+        URI urlForGettingEpic = url.resolve("/epics/" + "1234214");
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(urlForGettingTask)
+                .uri(urlForGettingEpic)
                 .version(HttpClient.Version.HTTP_1_1)
                 .header("Accept", "*/*")
                 .header("Content-Type", "application/json")
@@ -132,19 +123,19 @@ public class TaskHandlerNegativeTest {
 
         HttpResponse<String> response = httpClient.send(request, handler);
 
-        String expectedResponseBody = "{\"errorMessage\":\"Не найдена задача с id: 12344\"}";
+        String expectedResponseBody = "{\"errorMessage\":\"Не найден эпик с id: 1234214\"}";
 
         assertEquals(404, response.statusCode(), "Код ответа должен быть 404");
-        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о том что задача не найдена");
+        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о том что эпик не найден");
     }
 
     @Test
-    void deleteNotFoundTaskByIdTest() throws IOException, InterruptedException {
-        URI urlForDeletingTask = url.resolve("/tasks/" + 2134);
+    void deleteNotFoundEpicByIdTest() throws IOException, InterruptedException {
+        URI urlForDeletingEpic = url.resolve("/epics/" + "123333");
 
         HttpRequest request = HttpRequest.newBuilder()
                 .DELETE()
-                .uri(urlForDeletingTask)
+                .uri(urlForDeletingEpic)
                 .version(HttpClient.Version.HTTP_1_1)
                 .header("Accept", "*/*")
                 .header("Content-Type", "application/json")
@@ -152,9 +143,29 @@ public class TaskHandlerNegativeTest {
 
         HttpResponse<String> response = httpClient.send(request, handler);
 
-        String expectedResponseBody = "{\"errorMessage\":\"Не найдена задача с id: 2134\"}";
+        String expectedResponseBody = "{\"errorMessage\":\"Не найден эпик с id: 123333\"}";
 
         assertEquals(404, response.statusCode(), "Код ответа должен быть 404");
-        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о том что задача не найдена");
+        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о том что эпик не найден");
+    }
+
+    @Test
+    void getSubTasksByNotFoundEpicIdTest() throws IOException, InterruptedException {
+        URI urlForGettingSubTasks = url.resolve("/epics/" + "777" + "/subtasks");
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(urlForGettingSubTasks)
+                .version(HttpClient.Version.HTTP_1_1)
+                .header("Accept", "*/*")
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, handler);
+
+        String expectedResponseBody = "{\"errorMessage\":\"Не найден эпик с id: 777\"}";
+
+        assertEquals(404, response.statusCode(), "Код ответа должен быть 404");
+        assertEquals(expectedResponseBody, response.body(), "В теле ответа должно быть сообщение о том что эпик не найден");
     }
 }
