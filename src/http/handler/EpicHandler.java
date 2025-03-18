@@ -142,7 +142,7 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
     private void createEpic(HttpExchange exchange, Epic epic) throws IOException {
         try {
             int epicId = taskManager.createEpic(epic);
-            Epic epicFromManager = taskManager.getEpic(epicId);
+            Epic epicFromManager = findEpicInManager(epicId);
             String responseBody = gson.toJson(epicFromManager);
             sendResponse(exchange, 200, responseBody);
         } catch (EntityNotFoundException e) {
@@ -159,5 +159,15 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
         } catch (EntityNotFoundException e) {
             sendErrorResponse(exchange, 404, e.getMessage());
         }
+    }
+
+    private Epic findEpicInManager(int epicId) {
+        List<Epic> epics = taskManager.getEpics();
+        for (Epic epic : epics) {
+            if (epic.getId() == epicId) {
+                return epic;
+            }
+        }
+        throw new EntityNotFoundException("Задача с Id " + epicId + " не найдена");
     }
 }

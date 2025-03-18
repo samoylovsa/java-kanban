@@ -114,7 +114,7 @@ public class SubTaskHandler extends BaseHttpHandler implements HttpHandler {
     private void createSubTask(HttpExchange exchange, SubTask subTask) throws IOException {
         try {
             int subTaskId = taskManager.createSubTask(subTask);
-            SubTask subTaskFromManager = taskManager.getSubTask(subTaskId);
+            SubTask subTaskFromManager = findSubTaskInManager(subTaskId);
             String responseBody = gson.toJson(subTaskFromManager);
             sendResponse(exchange, 200, responseBody);
         } catch (EntityIntersectionException e) {
@@ -147,5 +147,15 @@ public class SubTaskHandler extends BaseHttpHandler implements HttpHandler {
             sendErrorResponse(exchange, 404, e.getMessage());
         }
         return null;
+    }
+
+    private SubTask findSubTaskInManager(int subTaskId) {
+        List<SubTask> subTasks = taskManager.getSubTasks();
+        for (SubTask subTask : subTasks) {
+            if (subTask.getId() == subTaskId) {
+                return subTask;
+            }
+        }
+        throw new EntityNotFoundException("Задача с Id " + subTaskId + " не найдена");
     }
 }
