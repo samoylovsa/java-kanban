@@ -5,12 +5,15 @@ import java.util.ArrayList;
 
 public class Epic extends Task {
 
-    private ArrayList<Integer> subTaskIdList;
+    private ArrayList<Integer> subTaskIdList = new ArrayList<>();
     private LocalDateTime endTime;
+
+    public Epic() {
+
+    }
 
     public Epic(String name, String description) {
         super(name, description, Status.NEW, null, null);
-        subTaskIdList = new ArrayList<>();
     }
 
     public ArrayList<Integer> getSubTaskIdList() {
