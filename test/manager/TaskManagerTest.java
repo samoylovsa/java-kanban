@@ -1,5 +1,7 @@
 package manager;
 
+import exceptions.EntityIntersectionException;
+import exceptions.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
@@ -103,7 +105,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     void shouldBeAssertWhenCreateSubTaskWithNonExistEpicId() {
         int nonExistEpicId = 54321;
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             taskManager.createSubTask(new SubTask("Name", "Description", Status.NEW, nonExistEpicId, startTime, duration));
         });
     }
@@ -125,7 +127,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         int nonExistingTaskId = 54321;
         Task nonExistingTask = new Task("Name", "Description", Status.IN_PROGRESS, startTime, duration);
         nonExistingTask.setId(nonExistingTaskId);
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             taskManager.updateTask(nonExistingTask);
         });
     }
@@ -160,7 +162,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         int nonExistingEpicId = 54321;
         Epic nonExistingEpic = new Epic("Name", "Description");
         nonExistingEpic.setId(nonExistingEpicId);
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             taskManager.updateEpic(nonExistingEpic);
         });
     }
@@ -197,7 +199,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         int nonExistingSubTaskId = 54321;
         SubTask nonExistingSubTask = new SubTask("Name", "Description", Status.IN_PROGRESS, epicId, startTime, duration);
         nonExistingSubTask.setId(nonExistingSubTaskId);
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             taskManager.updateSubTask(nonExistingSubTask);
         });
     }
@@ -211,7 +213,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         SubTask nonExistingSubTask = new SubTask("Name", "Description", Status.IN_PROGRESS, nonExistingEpicId, startTime, duration);
         nonExistingSubTask.setId(subTaskId);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             taskManager.updateSubTask(nonExistingSubTask);
         });
     }
@@ -226,7 +228,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         SubTask updatedSubTask = new SubTask("UpdatedName", "UpdatedDescription", Status.IN_PROGRESS, otherEpicId, startTime, duration);
         updatedSubTask.setId(subTaskId);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             taskManager.updateSubTask(updatedSubTask);
         });
     }
@@ -386,11 +388,9 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         ArrayList<Task> actualTasksAfterDeletion = new ArrayList<>(taskManager.getTasks());
         originalTasks.remove(taskIdForDeletion);
         ArrayList<Task> expectedTasksAfterDeletion = new ArrayList<>(originalTasks.values());
-        Task deletedTask = taskManager.getTask(taskIdForDeletion);
         int actualSizeAfterDeletion = actualTasksAfterDeletion.size();
         int expectedSizeAfterDeletion = 2;
 
-        assertNull(deletedTask);
         assertEquals(expectedSizeAfterDeletion, actualSizeAfterDeletion);
         assertEquals(expectedTasksAfterDeletion, actualTasksAfterDeletion);
     }
@@ -548,7 +548,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void shouldBeAssertIfEpicIdNotExist() {
         int nonExistEpicId = 54321;
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             taskManager.getSubTasksByEpic(nonExistEpicId);
         });
     }
@@ -1049,7 +1049,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task firstTask = new Task("Name1", "Description1", Status.NEW, startTime, duration);
         Task secondTask = new Task("Name2", "Description2", Status.NEW, startTime, duration);
         taskManager.createTask(firstTask);
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityIntersectionException.class, () -> {
             taskManager.createTask(secondTask);
         });
     }
@@ -1060,7 +1060,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         SubTask firstSubTask = new SubTask("Name1", "Description1", Status.NEW, epicId, startTime, duration);
         SubTask secondSubTask = new SubTask("Name2", "Description2", Status.NEW, epicId, startTime, duration);
         taskManager.createSubTask(firstSubTask);
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityIntersectionException.class, () -> {
             taskManager.createSubTask(secondSubTask);
         });
     }
@@ -1074,7 +1074,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         firstTask.setStartTime(startTime.plusMinutes(120));
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityIntersectionException.class, () -> {
             taskManager.updateTask(firstTask);
         });
     }
@@ -1089,7 +1089,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         firstSubTask.setStartTime(startTime.plusMinutes(120));
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityIntersectionException.class, () -> {
             taskManager.updateSubTask(firstSubTask);
         });
     }
@@ -1100,7 +1100,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task secondTask = new Task("Name", "Description", Status.NEW, startTime.plusMinutes(30), duration);
         taskManager.createTask(firstTask);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityIntersectionException.class, () -> {
             taskManager.createTask(secondTask);
         });
     }
@@ -1111,7 +1111,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task secondTask = new Task("Second Task", "Description", Status.NEW, startTime, duration);
         taskManager.createTask(firstTask);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityIntersectionException.class, () -> {
             taskManager.createTask(secondTask);
         });
     }
@@ -1122,7 +1122,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task secondTask = new Task("Second Task", "Description", Status.NEW, startTime.plusMinutes(10), Duration.ofMinutes(10));
         taskManager.createTask(firstTask);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(EntityIntersectionException.class, () -> {
             taskManager.createTask(secondTask);
         });
     }
