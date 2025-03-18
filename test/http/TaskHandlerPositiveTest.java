@@ -140,7 +140,8 @@ public class TaskHandlerPositiveTest {
         List<Task> expectedListOfAllTasks = taskManager.getTasks();
         List<Task> actualListOfAllTasks = gson.fromJson(
                 response.body(),
-                new TypeToken<List<Task>>() {}.getType()
+                new TypeToken<List<Task>>() {
+                }.getType()
         );
 
         assertEquals(200, response.statusCode(), "Код ответа должен быть 200");
